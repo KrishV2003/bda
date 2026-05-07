@@ -90,9 +90,11 @@
 20) Create Input File:
     -- nano students.txt
     -- Write:
-
-      
-
+       101,95
+       102,82
+       103,74
+       104,66
+       105,45
     -- Save and exit.
 21) Upload Input File to HDFS:
     -- hdfs dfs -mkdir /gradeinput
