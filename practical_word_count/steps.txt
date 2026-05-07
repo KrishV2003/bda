@@ -84,38 +84,36 @@
 	    DataNode
 	    SecondaryNameNode
 	    ResourceManager
-            NodeManager
-            Jps
+        NodeManager
+        Jps
 14) Create Project Folder: 
-    mkdir ~/grade
-    cd ~/grade
-15) Create Mapper File: nano GradeMapper.java also we can use gedit instead of nano
-16) Create Reducer File: nano GradeReducer.java
-17) Create Driver File: nano GradeDriver.java
+    mkdir ~/wordcount
+    cd ~/wordcount
+15) Create Mapper File: nano WCMapper.java also we can use gedit instead of nano
+16) Create Reducer File: nano WCReducer.java
+17) Create Driver File: nano WCDriver.java
 18) Compile Java Files: 
-    javac -classpath `hadoop classpath` -d . GradeMapper.java GradeReducer.java GradeDriver.java
+    javac -classpath `hadoop classpath` -d . WCMapper.java WCReducer.java WCDriver.java
 19) Create JAR File: 
-    jar -cvf grade.jar *.class
+    jar -cvf wordcount.jar *.class
 20) Create Input File:
-    -- nano students.txt
+    -- nano input.txt
     -- Write:
-       101,95	
-       102,82
-       103,74
-       104,66
-       105,45
+       hadoop is big data
+       hadoop is useful
+       big data is powerful
     -- Save and exit.
 21) Upload Input File to HDFS:
-    -- hdfs dfs -mkdir /gradeinput
-    -- hdfs dfs -put students.txt /gradeinput
-    -- hdfs dfs -ls /gradeinput
+    -- hdfs dfs -mkdir /input
+    -- hdfs dfs -put input.txt /input
+    -- hdfs dfs -ls /input
 22) Run MapReduce Program:
-    hadoop jar grade.jar GradeDriver /gradeinput /gradeoutput
+    hadoop jar wordcount.jar WCDriver /input /output
 23) View Output:
-    hdfs dfs -cat /gradeoutput/part-00000
+    hdfs dfs -cat /output/part-00000
 24) Before rerunning:
 
-    hdfs dfs -rm -r /gradeoutput
+    hdfs dfs -rm -r /output
 
     Because Hadoop won’t overwrite output folders.
 --------------------------------------------------------------------------
