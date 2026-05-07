@@ -1,0 +1,58 @@
+use studentDB
+
+db.students.insertOne({
+    name: "John",
+    age: 20,
+    city: "Pune"
+})
+
+db.students.insertOne({
+    name: "Alice",
+    age: 22,
+    city: "Mumbai"
+})
+
+db.students.insertMany([
+    {name:"Bob", age:21, city:"Delhi"},
+    {name:"Charlie", age:23, city:"Pune"}
+])
+
+db.students.find()
+
+db.students.findOne({name:"John"})
+
+db.students.find({city:"Pune"})
+
+db.students.find().pretty()
+
+db.students.updateOne(
+    {name:"John"},
+    {$set:{age:25}}
+)
+
+db.students.find().pretty()
+
+db.students.updateMany(
+    {city:"Pune"},
+    {$set:{country:"India"}}
+)
+
+db.students.find().pretty()
+
+db.students.deleteOne({name:"Bob"})
+
+db.students.find().pretty()
+
+db.students.deleteMany({city:"Pune"})
+
+db.students.find().pretty()
+
+db.students.deleteMany({})
+
+db.students.find().pretty()
+
+show dbs
+
+show collections
+
+exit

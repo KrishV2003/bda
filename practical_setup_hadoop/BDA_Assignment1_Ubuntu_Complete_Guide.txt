@@ -1,0 +1,1951 @@
+  PLATFORMS COVERED:
+  1. Apache Hadoop (HDFS + YARN)
+  2. Google Cloud BigQuery
+  3. Databricks Lakehouse Platform
+  4. Snowflake
+  5. Amazon Redshift
+
+  READ THIS FIRST:
+  - Follow every step in order. Do NOT skip any step.
+  - Every command must be typed exactly as shown (case-sensitive).
+  - Commands starting with # are COMMENTS — do NOT type these.
+  - Lines starting with $ represent the terminal prompt — do NOT type the $.
+  - After every command press ENTER to run it.
+  - If a command asks for your password, type: student123 (the password you set)
+  - If asked "Do you want to continue? [Y/n]" — type Y and press Enter.
+
+================================================================================
+  PART 0 — INSTALL VIRTUALBOX AND UBUNTU 22.04
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 0.1 — DOWNLOAD VIRTUALBOX (Do this on your Windows PC)
+--------------------------------------------------------------------------------
+
+STEP 1: Download VirtualBox
+  - Open any browser on your Windows PC
+  - Go to: https://www.virtualbox.org/wiki/Downloads
+  - Click: "Windows hosts" link
+  - File name: VirtualBox-7.x.x-Win.exe (about 110 MB)
+  - Wait for download to finish
+
+STEP 2: Install VirtualBox
+  - Double-click the downloaded VirtualBox-7.x.x-Win.exe file
+  - Click: Next
+  - Click: Next (keep default features selected)
+  - Click: Yes (when warned about network interfaces — this is normal)
+  - Click: Install
+  - If Windows asks "Do you want to allow this app to make changes?" — click Yes
+  - Click: Finish
+  - VirtualBox opens automatically
+
+--------------------------------------------------------------------------------
+SECTION 0.2 — DOWNLOAD UBUNTU ISO (Do this on your Windows PC)
+--------------------------------------------------------------------------------
+
+STEP 3: Download Ubuntu 22.04 LTS ISO
+  - Open browser
+  - Go to: https://ubuntu.com/download/desktop
+  - Click: "Download 22.04.x LTS" button
+  - File name: ubuntu-22.04.x-desktop-amd64.iso
+  - File size: approximately 4.7 GB
+  - WARNING: This is a large file — use a good WiFi connection
+  - Keep downloading and continue reading steps below while it downloads
+
+--------------------------------------------------------------------------------
+SECTION 0.3 — CREATE VIRTUAL MACHINE IN VIRTUALBOX
+--------------------------------------------------------------------------------
+
+STEP 4: Create a New Virtual Machine
+  - Open VirtualBox (if not already open)
+  - Click: New (blue star button at the top)
+  - Name: Ubuntu-BDA
+  - Folder: leave as default
+  - Type: Linux
+  - Version: Ubuntu (64-bit)
+  - Click: Next
+
+STEP 5: Set Memory (RAM)
+  - Move the slider to: 4096 MB (minimum)
+  - If your PC has 16 GB RAM, set it to: 8192 MB (8 GB) for better performance
+  - Click: Next
+
+STEP 6: Create Virtual Hard Disk
+  - Select: "Create a virtual hard disk now"
+  - Click: Create
+  - Hard disk file type: VDI (VirtualBox Disk Image) — leave default
+  - Click: Next
+  - Storage on physical hard disk: "Dynamically allocated" — leave default
+  - Click: Next
+  - File size: type 50 (for 50 GB minimum — Hadoop needs space)
+  - Click: Create
+  - You will now see your VM "Ubuntu-BDA" in the left panel
+
+STEP 7: Set Number of CPU Cores
+  - Right-click Ubuntu-BDA → Settings → System → Processor
+  - Set CPUs to: 2 (minimum) or 4 if available
+  - Click: OK
+
+--------------------------------------------------------------------------------
+SECTION 0.4 — ATTACH UBUNTU ISO AND INSTALL UBUNTU
+--------------------------------------------------------------------------------
+
+STEP 8: Attach the Downloaded ISO to the VM
+  - In VirtualBox, click on Ubuntu-BDA to select it
+  - Click: Settings (yellow gear icon)
+  - Click: Storage (on the left)
+  - Under "Storage Devices" you will see "Empty" under Controller: IDE
+  - Click on that "Empty" optical drive
+  - On the right side, click the small blue disc icon next to "Optical Drive"
+  - Click: "Choose a disk file..."
+  - Browse to where you downloaded the Ubuntu ISO
+  - Select: ubuntu-22.04.x-desktop-amd64.iso
+  - Click: Open
+  - Click: OK
+
+STEP 9: Start the Virtual Machine
+  - Click: Start (green arrow)
+  - The VM window opens and boots from the ISO
+  - You will see Ubuntu loading (purple screen with dots)
+  - Wait 1-2 minutes for it to fully load
+
+STEP 10: Install Ubuntu
+  - You will see the "Welcome" screen with "Try Ubuntu" and "Install Ubuntu"
+  - Click: Install Ubuntu
+  - Keyboard layout: English (US) — Click Continue
+  - Updates and other software: "Normal installation" — Click Continue
+  - Installation type: "Erase disk and install Ubuntu"
+    (Do not worry — this only erases the VIRTUAL disk, not your Windows PC)
+  - Click: Install Now
+  - Click: Continue (when asked about changes to disk)
+
+STEP 11: Set Location and User
+  - Where are you? Click your location on the map or type: Mumbai
+  - Click: Continue
+  - Your name: Student
+  - Your computer's name: bda-lab
+  - Pick a username: student
+  - Choose a password: student123
+  - Confirm your password: student123
+  - Select: "Require my password to log in"
+  - Click: Continue
+  - Installation begins — wait 10-15 minutes
+
+STEP 12: Restart After Installation
+  - When installation finishes, click: Restart Now
+  - When you see "Please remove the installation medium" — press Enter
+  - Ubuntu restarts and boots normally
+  - You will see the login screen
+  - Click on "Student" user
+  - Type password: student123
+  - Press Enter
+  - Ubuntu desktop appears — INSTALLATION COMPLETE!
+
+STEP 13: Install VirtualBox Guest Additions (Highly Recommended)
+  This makes the screen full-size and enables copy-paste between Windows and VM.
+  - In the VirtualBox menu at the top: click Devices
+  - Click: Insert Guest Additions CD image...
+  - Inside Ubuntu, a file manager window may open automatically
+  - If not, open Files app and look for VBox_GAs disk on the left
+  - Right-click inside the VBox_GAs folder → Open Terminal Here
+  - Type these commands:
+
+    $ sudo apt update
+    $ sudo apt install build-essential dkms linux-headers-$(uname -r) -y
+    $ sudo sh /media/student/VBox_GAs_*/VBoxLinuxAdditions.run
+
+  - Wait for it to finish, then restart the VM:
+
+    $ sudo reboot
+
+  - After restart, you can resize the VM window to full screen (View → Full Screen)
+
+================================================================================
+  PART 1 — APACHE HADOOP SETUP ON UBUNTU
+================================================================================
+
+  WHAT IS HADOOP?
+  Hadoop = HDFS (storage) + YARN (resource management) + MapReduce (processing)
+  We use pseudo-distributed mode: all daemons run on 1 machine (your VM).
+  This is standard for learning and practical exams.
+
+--------------------------------------------------------------------------------
+SECTION 1.1 — OPEN TERMINAL
+--------------------------------------------------------------------------------
+
+STEP 14: Open a Terminal in Ubuntu
+  - Press: Ctrl + Alt + T
+  - A black terminal window appears
+  - All Hadoop commands will be typed here
+  - You can also right-click the desktop → Open Terminal
+
+  NOTE: The terminal shows something like:
+  student@bda-lab:~$
+  This means you are logged in as "student" on machine "bda-lab"
+  The ~ means you are in your home folder (/home/student)
+  You only type what comes AFTER the $ sign
+
+--------------------------------------------------------------------------------
+SECTION 1.2 — UPDATE SYSTEM AND INSTALL JAVA
+--------------------------------------------------------------------------------
+
+STEP 15: Update Ubuntu Package List
+  Type exactly:
+
+    sudo apt update
+
+  - It will ask for password: type student123 (nothing shows while typing — that is normal)
+  - Press Enter
+  - Wait for it to finish (you will see text scrolling)
+
+STEP 16: Upgrade Existing Packages
+  Type:
+
+    sudo apt upgrade -y
+
+  - Wait for it to finish (may take 3-5 minutes)
+  - If it asks any questions, press Enter to accept defaults
+
+STEP 17: Install Java JDK 8
+  Hadoop requires Java. Install OpenJDK 8:
+
+    sudo apt install openjdk-8-jdk -y
+
+  - Wait for installation to finish
+
+STEP 18: Verify Java is Installed Correctly
+  Type:
+
+    java -version
+
+  Expected output (something like):
+    openjdk version "1.8.0_392"
+    OpenJDK Runtime Environment ...
+    OpenJDK 64-Bit Server VM ...
+
+  If you see this, Java is installed correctly. If not, run Step 17 again.
+
+STEP 19: Find Your Exact Java Path (VERY IMPORTANT — copy this output!)
+  Type:
+
+    readlink -f $(which java)
+
+  Example output:
+    /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+
+  Your JAVA_HOME = /usr/lib/jvm/java-8-openjdk-amd64
+  (Everything EXCEPT /jre/bin/java at the end)
+
+  WRITE THIS DOWN — you will need it in Step 27.
+  Most Ubuntu 22.04 systems will show: /usr/lib/jvm/java-8-openjdk-amd64
+
+--------------------------------------------------------------------------------
+SECTION 1.3 — INSTALL AND CONFIGURE SSH
+--------------------------------------------------------------------------------
+
+  WHY SSH? Hadoop daemons (NameNode, DataNode, etc.) communicate with each other
+  using SSH even on the same machine. We need passwordless SSH to localhost.
+
+STEP 20: Install SSH Server and Client
+  Type:
+
+    sudo apt install openssh-server openssh-client -y
+
+STEP 21: Generate SSH Key Pair
+  Type:
+
+    ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+
+  - The -P '' means no passphrase (empty password)
+  - Press Enter if asked anything
+  - You will see "Your identification has been saved" — this is correct
+
+STEP 22: Add Your Public Key to Authorized Keys
+  Type:
+
+    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+
+  Then set correct permissions:
+
+    chmod 0600 ~/.ssh/authorized_keys
+
+STEP 23: Test Passwordless SSH to Localhost
+  Type:
+
+    ssh localhost
+
+  - First time only: it asks "Are you sure you want to continue connecting?"
+  - Type: yes
+  - Press Enter
+  - You should get a NEW shell prompt (student@bda-lab:~$) WITHOUT asking for password
+  - This means passwordless SSH is working correctly
+  - Type: exit   to return to your original shell
+
+--------------------------------------------------------------------------------
+SECTION 1.4 — DOWNLOAD AND INSTALL HADOOP
+--------------------------------------------------------------------------------
+
+STEP 24: Download Hadoop 3.3.6
+  Type (this is ONE command — do not split it):
+
+    wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+
+  - File size: ~700 MB — wait for download to complete
+  - You will see a progress bar showing % complete
+  - If this URL doesn't work, try:
+    wget https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+
+STEP 25: Extract Hadoop to /usr/local/
+  Type:
+
+    sudo tar -xzf hadoop-3.3.6.tar.gz -C /usr/local/
+
+  - This may take 1-2 minutes — wait for it to finish
+
+STEP 26: Rename the Folder for Convenience
+  Type:
+
+    sudo mv /usr/local/hadoop-3.3.6 /usr/local/hadoop
+
+STEP 27: Give Your User Ownership of the Hadoop Folder
+  Type:
+
+    sudo chown -R $USER:$USER /usr/local/hadoop
+
+  Verify it worked:
+
+    ls /usr/local/hadoop
+
+  You should see folders like: bin  etc  include  lib  libexec  sbin  share
+
+--------------------------------------------------------------------------------
+SECTION 1.5 — SET ENVIRONMENT VARIABLES
+--------------------------------------------------------------------------------
+
+STEP 28: Open .bashrc File for Editing
+  Type:
+
+    nano ~/.bashrc
+
+  - The nano text editor opens with your .bashrc file
+  - Use the DOWN ARROW key to scroll to the very BOTTOM of the file
+  - The last lines probably look like something starting with # already
+
+STEP 29: Add Hadoop Environment Variables
+  At the very BOTTOM of the .bashrc file, add these lines.
+  Type them carefully (or copy-paste if Guest Additions clipboard is enabled):
+
+    # ===== HADOOP ENVIRONMENT VARIABLES =====
+    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+    export HADOOP_HOME=/usr/local/hadoop
+    export HADOOP_INSTALL=$HADOOP_HOME
+    export HADOOP_MAPRED_HOME=$HADOOP_HOME
+    export HADOOP_COMMON_HOME=$HADOOP_HOME
+    export HADOOP_HDFS_HOME=$HADOOP_HOME
+    export YARN_HOME=$HADOOP_HOME
+    export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+    export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
+    export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"
+
+  NOTE: If your java path from Step 19 was DIFFERENT from /usr/lib/jvm/java-8-openjdk-amd64
+  then change the JAVA_HOME line to match your actual path.
+
+STEP 30: Save and Exit nano
+  - Press: Ctrl + X  (to exit)
+  - It asks "Save modified buffer?" — Press: Y
+  - It shows the filename — Press: Enter
+  - You are back at the terminal
+
+STEP 31: Apply the Changes to Current Session
+  Type:
+
+    source ~/.bashrc
+
+STEP 32: Verify Hadoop Can Find Java
+  Type:
+
+    hadoop version
+
+  Expected output:
+    Hadoop 3.3.6
+    Source code repository ...
+    Compiled by ...
+
+  If you see this — Hadoop is installed correctly!
+  If you get "command not found" — go back to Step 28 and check your PATH variable.
+
+--------------------------------------------------------------------------------
+SECTION 1.6 — CONFIGURE HADOOP XML FILES
+--------------------------------------------------------------------------------
+
+  All config files are inside: /usr/local/hadoop/etc/hadoop/
+  We need to edit 5 files. Use nano for each.
+
+  HOW TO USE NANO (quick guide):
+  - Arrow keys: move cursor
+  - Ctrl+K: cut/delete an entire line
+  - Ctrl+W: search for text
+  - Ctrl+X then Y then Enter: save and exit
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FILE 1: hadoop-env.sh
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+STEP 33: Open hadoop-env.sh
+  Type:
+
+    nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+
+STEP 34: Find and Edit the JAVA_HOME Line
+  - Press Ctrl+W to search
+  - Type: export JAVA_HOME
+  - Press Enter
+  - You will see a line like: # export JAVA_HOME=
+  - Move cursor to that line
+  - Delete the entire line (Ctrl+K)
+  - Type this replacement:
+
+    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+STEP 35: Save hadoop-env.sh
+  - Press: Ctrl + X
+  - Press: Y
+  - Press: Enter
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FILE 2: core-site.xml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+STEP 36: Open core-site.xml
+  Type:
+
+    nano /usr/local/hadoop/etc/hadoop/core-site.xml
+
+STEP 37: Find the <configuration> section
+  The file has a section that looks like:
+    <configuration>
+    </configuration>
+
+  DELETE everything between those two tags (use Ctrl+K for each line).
+  Then type the following BETWEEN the <configuration> and </configuration> tags:
+
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/home/student/hadooptmpdata</value>
+    </property>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://localhost:9000</value>
+    </property>
+
+  The final file should look EXACTLY like this:
+  ---------------------------------------------------
+  <configuration>
+      <property>
+          <name>hadoop.tmp.dir</name>
+          <value>/home/student/hadooptmpdata</value>
+      </property>
+      <property>
+          <name>fs.defaultFS</name>
+          <value>hdfs://localhost:9000</value>
+      </property>
+  </configuration>
+  ---------------------------------------------------
+
+STEP 38: Save core-site.xml
+  - Press: Ctrl + X → Y → Enter
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FILE 3: hdfs-site.xml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+STEP 39: Open hdfs-site.xml
+  Type:
+
+    nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+
+STEP 40: Replace the <configuration> section
+  Delete what is between <configuration> tags and type:
+
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///home/student/hdfs/namenode</value>
+    </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:///home/student/hdfs/datanode</value>
+    </property>
+
+  Final file:
+  ---------------------------------------------------
+  <configuration>
+      <property>
+          <name>dfs.replication</name>
+          <value>1</value>
+      </property>
+      <property>
+          <name>dfs.namenode.name.dir</name>
+          <value>file:///home/student/hdfs/namenode</value>
+      </property>
+      <property>
+          <name>dfs.datanode.data.dir</name>
+          <value>file:///home/student/hdfs/datanode</value>
+      </property>
+  </configuration>
+  ---------------------------------------------------
+
+STEP 41: Save hdfs-site.xml
+  - Press: Ctrl + X → Y → Enter
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FILE 4: mapred-site.xml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+STEP 42: Open mapred-site.xml
+  Type:
+
+    nano /usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+STEP 43: Replace the <configuration> section with:
+
+  ---------------------------------------------------
+  <configuration>
+      <property>
+          <name>mapreduce.framework.name</name>
+          <value>yarn</value>
+      </property>
+      <property>
+          <name>mapreduce.application.classpath</name>
+          <value>$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*</value>
+      </property>
+  </configuration>
+  ---------------------------------------------------
+
+STEP 44: Save mapred-site.xml
+  - Press: Ctrl + X → Y → Enter
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FILE 5: yarn-site.xml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+STEP 45: Open yarn-site.xml
+  Type:
+
+    nano /usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+STEP 46: Replace the <configuration> section with:
+
+  ---------------------------------------------------
+  <configuration>
+      <property>
+          <name>yarn.nodemanager.aux-services</name>
+          <value>mapreduce_shuffle</value>
+      </property>
+      <property>
+          <name>yarn.nodemanager.env-whitelist</name>
+          <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
+      </property>
+  </configuration>
+  ---------------------------------------------------
+
+STEP 47: Save yarn-site.xml
+  - Press: Ctrl + X → Y → Enter
+
+--------------------------------------------------------------------------------
+SECTION 1.7 — CREATE DIRECTORIES AND FORMAT NAMENODE
+--------------------------------------------------------------------------------
+
+STEP 48: Create Required HDFS Directories
+  Type each command separately:
+
+    mkdir -p ~/hdfs/namenode
+    mkdir -p ~/hdfs/datanode
+    mkdir -p ~/hadooptmpdata
+
+  Verify they were created:
+
+    ls ~/hdfs/
+    ls ~/
+
+  You should see: datanode  namenode  (and hadooptmpdata in home folder)
+
+STEP 49: Format the NameNode
+  This is like formatting a hard drive — initializes HDFS.
+  DO THIS ONLY ONCE — formatting again will erase all HDFS data!
+
+  Type:
+
+    hdfs namenode -format
+
+  - A LOT of text will scroll by — this is normal
+  - Look for this line near the end:
+    "Storage directory /home/student/hdfs/namenode has been successfully formatted."
+  - If you see this — formatting was successful!
+  - If you see any ERROR — go back and check hdfs-site.xml (Step 39-41)
+
+--------------------------------------------------------------------------------
+SECTION 1.8 — START HADOOP AND VERIFY
+--------------------------------------------------------------------------------
+
+STEP 50: Start HDFS (NameNode + DataNode)
+  Type:
+
+    start-dfs.sh
+
+  Expected output:
+    Starting namenodes on [localhost]
+    Starting datanodes
+    Starting secondary namenodes [bda-lab]
+
+  If it asks for password — SSH is not set up correctly. Go back to Step 20-23.
+
+STEP 51: Start YARN (ResourceManager + NodeManager)
+  Type:
+
+    start-yarn.sh
+
+  Expected output:
+    Starting resourcemanager
+    Starting nodemanagers
+
+STEP 52: Verify All 4 Daemons Are Running (MOST IMPORTANT STEP)
+  Type:
+
+    jps
+
+  You MUST see all 4 of these in the output (numbers will be different):
+    12345 NameNode
+    12456 DataNode
+    12567 ResourceManager
+    12678 NodeManager
+    12789 Jps
+
+  IF ANY OF THESE ARE MISSING:
+  - NameNode missing: Check core-site.xml and hdfs-site.xml
+  - DataNode missing: Check hdfs-site.xml, delete ~/hdfs/datanode contents and reformat
+  - ResourceManager missing: Check yarn-site.xml
+  - NodeManager missing: Check yarn-site.xml
+
+STEP 53: Open Hadoop Web UIs in Firefox
+  Open Firefox inside Ubuntu VM.
+  
+  Go to:  http://localhost:9870
+  - This is the HDFS NameNode Web UI
+  - You should see: "Overview" page with cluster info
+  - Check "Live Nodes" — it should say: 1
+  - If you see this page — HDFS is working perfectly!
+
+  Go to:  http://localhost:8088
+  - This is the YARN ResourceManager Web UI
+  - You should see: "Cluster" overview page
+  - This shows running applications and cluster resources
+
+  TAKE SCREENSHOTS of both pages for your practical file!
+
+--------------------------------------------------------------------------------
+SECTION 1.9 — TEST HDFS WITH COMMANDS
+--------------------------------------------------------------------------------
+
+STEP 54: List Root Directory of HDFS
+  Type:
+
+    hdfs dfs -ls /
+
+  First time this may show nothing — that is normal (empty HDFS)
+
+STEP 55: Create Directories in HDFS
+  Type:
+
+    hdfs dfs -mkdir /user
+    hdfs dfs -mkdir /user/student
+    hdfs dfs -mkdir /user/student/input
+
+  Verify:
+
+    hdfs dfs -ls /user/student/
+
+STEP 56: Create a Sample Text File and Upload to HDFS
+  Type:
+
+    echo "Hello Hadoop running on Ubuntu Linux" > ~/sample.txt
+    echo "This is Big Data Analytics Assignment 1" >> ~/sample.txt
+    echo "Student: Your Name Here" >> ~/sample.txt
+
+  View the local file:
+
+    cat ~/sample.txt
+
+  Upload to HDFS:
+
+    hdfs dfs -put ~/sample.txt /user/student/input/
+
+STEP 57: Verify File is in HDFS
+  Type:
+
+    hdfs dfs -ls /user/student/input/
+
+  Expected output:
+    Found 1 items
+    -rw-r--r--   1 student supergroup   ... /user/student/input/sample.txt
+
+STEP 58: Read the File Directly from HDFS
+  Type:
+
+    hdfs dfs -cat /user/student/input/sample.txt
+
+  You should see the contents of your file — this confirms HDFS read/write works!
+
+STEP 59: Check Cluster Health Report
+  Type:
+
+    hdfs dfsadmin -report
+
+  Look for:
+    Live datanodes (1):   <-- This means your DataNode is running
+    Configured Capacity: ... GB
+    DFS Remaining: ... GB
+
+STEP 60: HADOOP SETUP IS COMPLETE!
+  Summary of what is running:
+  - NameNode  : manages HDFS directory structure (like a table of contents)
+  - DataNode  : stores actual data blocks
+  - ResourceManager : manages cluster compute resources (YARN)
+  - NodeManager     : runs tasks on each node (YARN)
+  - HDFS Web UI     : http://localhost:9870
+  - YARN Web UI     : http://localhost:8088
+
+--------------------------------------------------------------------------------
+SECTION 1.10 — DAILY START/STOP COMMANDS
+--------------------------------------------------------------------------------
+
+  Every time you open the VM and want to use Hadoop, run:
+
+    start-dfs.sh && start-yarn.sh
+
+  Before shutting down the VM, always stop Hadoop cleanly:
+
+    stop-yarn.sh && stop-dfs.sh
+
+  Check status at any time:
+
+    jps
+
+================================================================================
+  PART 2 — GOOGLE CLOUD BIGQUERY SETUP
+================================================================================
+
+  GOOD NEWS: BigQuery is browser-based. No heavy installation.
+  You just need a Google account and the gcloud CLI tool.
+
+--------------------------------------------------------------------------------
+SECTION 2.1 — CREATE GOOGLE CLOUD ACCOUNT AND PROJECT
+--------------------------------------------------------------------------------
+
+STEP 61: Create/Use a Google Account
+  - Open Firefox in your Ubuntu VM
+  - Go to: https://accounts.google.com
+  - Log in with your existing Google account
+  - OR create a new one if needed
+
+STEP 62: Go to Google Cloud Console
+  - Go to: https://console.cloud.google.com
+  - Accept the Terms of Service when prompted
+  - You will land on the Google Cloud dashboard
+
+STEP 63: Create a New Project
+  - Click the project dropdown at the very top (next to "Google Cloud" text)
+  - Click: NEW PROJECT
+  - Project name: bda-lab-2025
+  - Organization: leave as "No organization"
+  - Click: CREATE
+  - Wait about 30 seconds
+  - Click the project dropdown again and select bda-lab-2025 to switch to it
+  - You should see "bda-lab-2025" in the top bar
+
+STEP 64: Enable BigQuery API
+  - In the search bar at the top of the page, type: BigQuery API
+  - Click on "BigQuery API" from the results (under Marketplace)
+  - Click the blue: ENABLE button
+  - Wait 30-60 seconds for it to enable
+  - You will see a dashboard for the BigQuery API
+
+STEP 65: Set Up Billing (Required Even for Free Use)
+  - In the left sidebar, click: Billing
+  - Click: Link a billing account
+  - If you don't have one, click: Create billing account
+  - Enter your name, country (India), and credit/debit card details
+  - You will NOT be charged — free tier covers this assignment
+  - Google gives $300 free credits for 90 days to new accounts
+  - Click: Start free trial
+
+--------------------------------------------------------------------------------
+SECTION 2.2 — INSTALL GOOGLE CLOUD SDK (gcloud) ON UBUNTU
+--------------------------------------------------------------------------------
+
+STEP 66: Open Terminal in Ubuntu VM
+  Press: Ctrl + Alt + T
+
+STEP 67: Add Google's Package Signing Key
+  Type (this is one command):
+
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+STEP 68: Add Google Cloud Repository
+  Type (this is one command — type it all on one line):
+
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+STEP 69: Update Package List and Install gcloud
+  Type:
+
+    sudo apt update
+    sudo apt install google-cloud-cli -y
+
+  Wait for installation to finish (may take 2-3 minutes).
+
+STEP 70: Verify gcloud is Installed
+  Type:
+
+    gcloud --version
+
+  Expected output:
+    Google Cloud SDK 450.x.x
+    bq 2.x.x
+    core 2023.x.x.x
+    gcloud-crc32c 1.x.x
+
+--------------------------------------------------------------------------------
+SECTION 2.3 — AUTHENTICATE AND CONFIGURE GCLOUD
+--------------------------------------------------------------------------------
+
+STEP 71: Initialize and Login
+  Type:
+
+    gcloud init
+
+  - Press: 1  (to log in with a new account)
+  - A browser opens automatically with Google login page
+  - Log in with your Google account
+  - Click: Allow  (to give gcloud access to your account)
+  - Browser shows "You are now authenticated with the gcloud CLI!"
+  - Go back to terminal
+
+STEP 72: Select Your Project
+  - In the terminal, it asks: "Pick cloud project to use"
+  - Find bda-lab-2025 in the list and enter its number
+  - OR type: bda-lab-2025
+
+STEP 73: Set Default Region
+  - When asked "Do you want to configure a default Compute Region and Zone?"
+  - Type: Y
+  - Enter: 35  (for asia-south1-a = Mumbai)
+  - Press Enter
+
+STEP 74: Enable BigQuery API via CLI
+  Type:
+
+    gcloud services enable bigquery.googleapis.com
+
+  Expected output:
+    Operation "operations/..." finished successfully.
+
+STEP 75: Verify Your Project is Set
+  Type:
+
+    gcloud config list
+
+  You should see: project = bda-lab-2025
+
+--------------------------------------------------------------------------------
+SECTION 2.4 — CREATE DATASET AND TABLES IN BIGQUERY
+--------------------------------------------------------------------------------
+
+STEP 76: Create a BigQuery Dataset
+  Type:
+
+    bq --location=US mk --dataset bda-lab-2025:demo_dataset
+
+  Expected output:
+    Dataset 'bda-lab-2025:demo_dataset' successfully created.
+
+STEP 77: Verify the Dataset Was Created
+  Type:
+
+    bq ls
+
+  Expected output:
+    datasetId
+    ----------------
+    demo_dataset
+
+STEP 78: Create a Table Using SQL
+  Type (this is one command — the backslash \ continues the line):
+
+    bq query --use_legacy_sql=false \
+    'CREATE TABLE IF NOT EXISTS demo_dataset.students (
+      id INT64,
+      name STRING,
+      dept STRING,
+      score FLOAT64
+    );'
+
+STEP 79: Insert Data into the Table
+  Type:
+
+    bq query --use_legacy_sql=false \
+    'INSERT INTO demo_dataset.students VALUES
+    (1, "Alice", "AI-DS", 89.5),
+    (2, "Bob", "CS", 76.2),
+    (3, "Charlie", "IT", 91.0),
+    (4, "Diana", "AI-DS", 85.7);'
+
+STEP 80: Run a SELECT Query
+  Type:
+
+    bq query --use_legacy_sql=false \
+    'SELECT name, dept, score FROM demo_dataset.students ORDER BY score DESC;'
+
+  Expected output:
+    +----------+-------+-------+
+    |   name   | dept  | score |
+    +----------+-------+-------+
+    | Charlie  | IT    |  91.0 |
+    | Alice    | AI-DS |  89.5 |
+    | Diana    | AI-DS |  85.7 |
+    | Bob      | CS    |  76.2 |
+    +----------+-------+-------+
+
+STEP 81: Show Dataset Info (for Practical File)
+  Type:
+
+    bq --location=US show --format=prettyjson demo_dataset
+
+  This shows detailed JSON info about your dataset — good for screenshots.
+
+STEP 82: Use BigQuery Web UI (RECOMMENDED for Screenshots)
+  - Open Firefox in your VM
+  - Go to: https://console.cloud.google.com/bigquery
+  - In the Explorer panel on the left, you will see your dataset: demo_dataset
+  - Click the arrow next to demo_dataset → click students table
+  - Click: PREVIEW tab to see your data
+  - Click the + icon to open SQL editor
+  - Type: SELECT * FROM demo_dataset.students ORDER BY score DESC;
+  - Click: RUN
+  - Take screenshot of the results for your practical file!
+
+STEP 83: Configure Access Control (IAM)
+  - In Google Cloud Console, go to: IAM & Admin → IAM (from left menu)
+  - Click: + GRANT ACCESS
+  - New principals: enter your second email or a test email
+  - Role: BigQuery Data Viewer
+  - Click: SAVE
+  - This controls who can view your BigQuery data
+
+================================================================================
+  PART 3 — DATABRICKS LAKEHOUSE PLATFORM SETUP
+================================================================================
+
+  NO INSTALLATION NEEDED on Ubuntu for Databricks!
+  Databricks Community Edition is fully browser-based and FREE.
+
+--------------------------------------------------------------------------------
+SECTION 3.1 — CREATE FREE DATABRICKS ACCOUNT
+--------------------------------------------------------------------------------
+
+STEP 84: Sign Up for Databricks Community Edition
+  - Open Firefox in your Ubuntu VM
+  - Go to: https://www.databricks.com/try-databricks
+  - Fill in the form:
+    * First Name: Student
+    * Last Name: (your surname)
+    * Company Email: your email address
+    * Company: Dr. DY Patil Institute of Technology
+    * Title: Student
+  - Click: Continue
+
+  VERY IMPORTANT: On the next screen, look at the bottom.
+  You will see options for AWS, Azure, GCP and also:
+  "Get started with Community Edition"
+  Click: "Get started with Community Edition"
+  Do NOT click AWS/Azure/GCP — those require billing!
+
+STEP 85: Verify Your Email
+  - Check your email inbox
+  - Find email from Databricks
+  - Click the verification link in the email
+  - Set your password on the opened page
+  - Click: Set password (or similar button)
+
+STEP 86: Log In to Databricks
+  - Go to: https://community.cloud.databricks.com
+  - Enter your email and password
+  - You land on the Databricks workspace homepage
+
+--------------------------------------------------------------------------------
+SECTION 3.2 — CREATE A CLUSTER
+--------------------------------------------------------------------------------
+
+STEP 87: Navigate to Compute
+  - In the left sidebar, click: Compute (icon looks like a lightning bolt)
+  - OR click the grid icon at the top and find Compute
+
+STEP 88: Create a New Cluster
+  - Click: + Create compute  (blue button)
+  - Cluster name: bda-cluster
+  - Policy: Unrestricted
+  - Cluster mode: Single Node
+  - Databricks runtime version: Select "13.3 LTS (Spark 3.4.1, Scala 2.12)"
+  - (Community Edition automatically assigns a node type)
+  - Click: Create compute
+
+STEP 89: Wait for Cluster to Start
+  - Status changes from "Pending" to "Running"
+  - This takes 3-5 minutes
+  - You will see a green circle when it is Running
+  - TAKE A SCREENSHOT of the Running cluster status!
+
+--------------------------------------------------------------------------------
+SECTION 3.3 — CREATE A NOTEBOOK AND RUN PYSPARK CODE
+--------------------------------------------------------------------------------
+
+STEP 90: Create a New Notebook
+  - In the left sidebar, click: Workspace
+  - Click on your username (email) folder
+  - Click the three dots (...)  → Create → Notebook
+  - Name: BDA_Practical_Assignment_1
+  - Default Language: Python
+  - Cluster: bda-cluster  (select from dropdown)
+  - Click: Create
+
+STEP 91: Run Cell 1 — Check Spark Version
+  - Click in the first cell (the empty box)
+  - Type this code:
+
+    print(f"Spark Version: {spark.version}")
+    print(f"Python Version: {sc.pythonVer}")
+    print("Databricks is running successfully!")
+
+  - Press: Shift + Enter  to run the cell
+  - Wait for the cluster to warm up (first run takes ~60 seconds)
+  - Expected output:
+    Spark Version: 3.4.1
+    Python Version: 3.10
+    Databricks is running successfully!
+
+STEP 92: Run Cell 2 — Create a DataFrame
+  - A new cell appears below automatically
+  - Click in it and type:
+
+    from pyspark.sql import Row
+    from pyspark.sql.functions import avg, count, col
+
+    # Create sample data
+    data = [
+        Row(id=1, name="Alice",   dept="AI-DS", salary=75000),
+        Row(id=2, name="Bob",     dept="CS",    salary=82000),
+        Row(id=3, name="Charlie", dept="AI-DS", salary=91000),
+        Row(id=4, name="Diana",   dept="IT",    salary=68000),
+        Row(id=5, name="Evan",    dept="CS",    salary=77000),
+    ]
+
+    # Create Spark DataFrame
+    df = spark.createDataFrame(data)
+
+    # Display the DataFrame
+    df.show()
+
+    # Show schema (column names and types)
+    df.printSchema()
+
+  - Press: Shift + Enter
+  - Expected: A table showing all 5 employees and their schema
+
+STEP 93: Run Cell 3 — Aggregation (GROUP BY)
+  - Type in the next cell:
+
+    # Group by department and calculate statistics
+    result = df.groupBy("dept") \
+               .agg(
+                   avg("salary").alias("avg_salary"),
+                   count("*").alias("headcount")
+               ) \
+               .orderBy(col("avg_salary").desc())
+
+    result.show()
+    print("Aggregation completed successfully!")
+
+  - Press: Shift + Enter
+  - Expected: Department-wise average salary
+
+STEP 94: Run Cell 4 — Save as Delta Table (KEY LAKEHOUSE FEATURE!)
+  - Type in next cell:
+
+    # Save as Delta format (the core Lakehouse format)
+    df.write.format("delta") \
+            .mode("overwrite") \
+            .save("/tmp/employees_delta")
+
+    print("Delta table saved successfully!")
+
+    # Read it back from Delta format
+    df_from_delta = spark.read.format("delta").load("/tmp/employees_delta")
+    print("Reading back from Delta table:")
+    df_from_delta.show()
+
+  - Press: Shift + Enter
+  - Expected: "Delta table saved successfully!" and the data printed again
+
+STEP 95: Run Cell 5 — SQL Queries Inside Databricks
+  - Type in next cell:
+
+    # Register the DataFrame as a temporary SQL view
+    df.createOrReplaceTempView("employees")
+
+    # Run SQL directly
+    result = spark.sql("""
+        SELECT dept,
+               MAX(salary) AS max_salary,
+               MIN(salary) AS min_salary,
+               COUNT(*)    AS total_employees
+        FROM employees
+        GROUP BY dept
+        ORDER BY max_salary DESC
+    """)
+
+    result.show()
+
+  - Press: Shift + Enter
+  - You can now write SQL just like a database!
+
+STEP 96: DATABRICKS SETUP IS COMPLETE!
+  Take screenshots of:
+  1. The cluster in "Running" state
+  2. Cell 2 output showing the DataFrame table
+  3. Cell 4 output showing Delta table creation
+
+================================================================================
+  PART 4 — SNOWFLAKE CLOUD DATA WAREHOUSE SETUP
+================================================================================
+
+  Snowflake is fully browser-based. Free 30-day trial.
+  No installation needed in Ubuntu.
+
+--------------------------------------------------------------------------------
+SECTION 4.1 — CREATE SNOWFLAKE ACCOUNT
+--------------------------------------------------------------------------------
+
+STEP 97: Sign Up for Snowflake Free Trial
+  - Open Firefox
+  - Go to: https://signup.snowflake.com
+  - Fill in:
+    * First Name: Student
+    * Last Name: (your surname)
+    * Email: your email address
+    * Role: Student
+    * Company: Dr DY Patil Institute of Technology
+    * Country: India
+  - Click: CONTINUE
+
+STEP 98: Choose Cloud Options
+  - Snowflake Edition: STANDARD  (leave default)
+  - Cloud Provider: AWS
+  - Region: Asia Pacific (Mumbai)   <-- choose this for India
+  - Click: GET STARTED
+
+STEP 99: Activate Your Account
+  - Check your email for: "Activate Your Snowflake Account"
+  - Click the activation link in the email
+  - Choose a username: student_bda
+  - Choose a password: Student@BDA2025
+  - (Must have: uppercase, lowercase, number, special character)
+  - Click: Get started
+
+STEP 100: Log In to Snowsight (Snowflake Web UI)
+  - Your Snowflake URL looks like: https://XXXXXXXX.snowflakecomputing.com
+  - You are automatically logged in after activation
+  - You land on the Snowsight dashboard
+  - Explore the left sidebar: Worksheets, Databases, Warehouses, Admin
+
+--------------------------------------------------------------------------------
+SECTION 4.2 — CREATE WAREHOUSE, DATABASE, SCHEMA
+--------------------------------------------------------------------------------
+
+STEP 101: Open a New Worksheet
+  - In the left sidebar, click: Worksheets
+  - Click: + Worksheet  (top right button or the + icon)
+  - A SQL editor opens
+
+STEP 102: Create a Virtual Warehouse
+  - In the worksheet, type this SQL:
+
+    CREATE WAREHOUSE IF NOT EXISTS DEMO_WH
+      WITH WAREHOUSE_SIZE = 'X-SMALL'
+           AUTO_SUSPEND = 300
+           AUTO_RESUME = TRUE
+           INITIALLY_SUSPENDED = TRUE;
+
+  - Click the blue Run button (or press Ctrl+Enter)
+  - Expected: "Warehouse DEMO_WH successfully created."
+
+STEP 103: Use the Warehouse
+  Type and run:
+
+    USE WAREHOUSE DEMO_WH;
+
+  Expected: "Statement executed successfully."
+
+STEP 104: Create a Database
+  Type and run:
+
+    CREATE DATABASE IF NOT EXISTS ANALYTICS_DB;
+
+  Then:
+
+    USE DATABASE ANALYTICS_DB;
+
+STEP 105: Create a Schema
+  Type and run:
+
+    CREATE SCHEMA IF NOT EXISTS BDA_SCHEMA;
+
+  Then:
+
+    USE SCHEMA BDA_SCHEMA;
+
+  Verify everything:
+
+    SELECT CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA();
+
+  Expected output:
+    DEMO_WH  |  ANALYTICS_DB  |  BDA_SCHEMA
+
+--------------------------------------------------------------------------------
+SECTION 4.3 — CREATE TABLES AND INSERT DATA
+--------------------------------------------------------------------------------
+
+STEP 106: Create a Students Table
+  Type and run:
+
+    CREATE OR REPLACE TABLE STUDENTS (
+        ID        INTEGER AUTOINCREMENT PRIMARY KEY,
+        NAME      VARCHAR(100),
+        DEPT      VARCHAR(50),
+        MARKS     FLOAT,
+        ENROLL_DT DATE DEFAULT CURRENT_DATE
+    );
+
+  Expected: "Table STUDENTS successfully created."
+
+STEP 107: Insert Sample Data
+  Type and run:
+
+    INSERT INTO STUDENTS (NAME, DEPT, MARKS) VALUES
+        ('Alice',   'AI-DS', 89.5),
+        ('Bob',     'CS',    76.2),
+        ('Charlie', 'IT',    91.0),
+        ('Diana',   'AI-DS', 85.7),
+        ('Evan',    'CS',    78.4);
+
+  Expected: "5 rows inserted."
+
+STEP 108: Query the Data
+  Type and run:
+
+    -- View all students sorted by marks
+    SELECT * FROM STUDENTS ORDER BY MARKS DESC;
+
+  Then run:
+
+    -- Department-wise average
+    SELECT DEPT,
+           COUNT(*)       AS TOTAL_STUDENTS,
+           AVG(MARKS)     AS AVG_MARKS,
+           MAX(MARKS)     AS HIGHEST,
+           MIN(MARKS)     AS LOWEST
+    FROM STUDENTS
+    GROUP BY DEPT
+    ORDER BY AVG_MARKS DESC;
+
+  TAKE A SCREENSHOT of both results for your practical file!
+
+--------------------------------------------------------------------------------
+SECTION 4.4 — CONFIGURE USERS AND ROLES
+--------------------------------------------------------------------------------
+
+STEP 109: Create a New Role
+  Type and run each command separately:
+
+    -- Create an analyst role
+    CREATE ROLE IF NOT EXISTS DATA_ANALYST;
+
+    -- Grant warehouse access to the role
+    GRANT USAGE ON WAREHOUSE DEMO_WH TO ROLE DATA_ANALYST;
+
+    -- Grant database access
+    GRANT USAGE ON DATABASE ANALYTICS_DB TO ROLE DATA_ANALYST;
+
+    -- Grant schema access
+    GRANT USAGE ON SCHEMA ANALYTICS_DB.BDA_SCHEMA TO ROLE DATA_ANALYST;
+
+    -- Grant table read access
+    GRANT SELECT ON ALL TABLES IN SCHEMA ANALYTICS_DB.BDA_SCHEMA TO ROLE DATA_ANALYST;
+
+STEP 110: Create a New User and Assign Role
+  Type and run:
+
+    CREATE USER IF NOT EXISTS analyst1
+        PASSWORD     = 'Analyst@2025'
+        DEFAULT_ROLE = DATA_ANALYST
+        DEFAULT_WAREHOUSE = DEMO_WH
+        DEFAULT_NAMESPACE = ANALYTICS_DB.BDA_SCHEMA;
+
+    GRANT ROLE DATA_ANALYST TO USER analyst1;
+
+  Expected: "User ANALYST1 successfully created." / "Statement executed successfully."
+
+--------------------------------------------------------------------------------
+SECTION 4.5 — SNOWFLAKE TIME TRAVEL (MENTION THIS IN EXAM!)
+--------------------------------------------------------------------------------
+
+STEP 111: Demonstrate Time Travel
+  This is Snowflake's most unique feature — query data from the PAST!
+  Type and run:
+
+    -- See what the STUDENTS table looked like 2 minutes ago
+    -- (It may look the same since we just created it — that is fine)
+    SELECT * FROM STUDENTS AT (OFFSET => -120);
+
+    -- The OFFSET is in SECONDS. -120 = 2 minutes ago.
+
+  Now demonstrate UNDROP (accidental deletion recovery):
+
+    -- Simulate accidentally dropping the table
+    DROP TABLE STUDENTS;
+
+    -- Check it is gone
+    SHOW TABLES LIKE 'STUDENTS';
+
+    -- Magically restore it!
+    UNDROP TABLE STUDENTS;
+
+    -- Verify it is back
+    SELECT COUNT(*) FROM STUDENTS;
+
+  Expected: Table is restored instantly with all 5 rows!
+
+  Tell your examiner: "Snowflake Time Travel allows querying historical data
+  up to 90 days back and instantly restoring accidentally dropped tables."
+
+================================================================================
+  PART 5 — AMAZON REDSHIFT SETUP
+================================================================================
+
+  Amazon Redshift is AWS's managed cloud data warehouse.
+  You use the AWS browser console + Query Editor — no installation in Ubuntu.
+
+--------------------------------------------------------------------------------
+SECTION 5.1 — CREATE AWS ACCOUNT
+--------------------------------------------------------------------------------
+
+STEP 112: Sign Up for AWS
+  - Open Firefox
+  - Go to: https://aws.amazon.com
+  - Click: Create an AWS Account
+  - Email address: your email
+  - Password: choose a strong password
+  - AWS account name: BDA-Lab-Account
+  - Click: Continue (Step 1 of 5)
+
+STEP 113: Contact Information
+  - Account type: Personal
+  - Fill in your name, phone, address (India)
+  - Click: Continue (Step 2 of 5)
+
+STEP 114: Payment Information
+  - Enter credit/debit card details
+  - NOTE: You will NOT be charged for free tier usage
+  - AWS may charge ₹2 as a temporary verification charge that is refunded
+  - Click: Verify and Continue (Step 3 of 5)
+
+STEP 115: Verify Identity
+  - Choose: Text message (SMS)
+  - Enter your phone number (with +91 for India)
+  - Enter the verification code you receive
+  - Click: Continue (Step 4 of 5)
+
+STEP 116: Choose Support Plan
+  - Select: Basic support – Free
+  - Click: Complete sign up (Step 5 of 5)
+  - Your account is created!
+
+STEP 117: Log In to AWS Console
+  - Go to: https://console.aws.amazon.com
+  - Log in as Root user with your email and password
+  - You land on the AWS Management Console dashboard
+
+--------------------------------------------------------------------------------
+SECTION 5.2 — CREATE REDSHIFT CLUSTER
+--------------------------------------------------------------------------------
+
+STEP 118: Navigate to Amazon Redshift
+  - In the AWS Console search bar at the top, type: Redshift
+  - Click: Amazon Redshift from the results
+  - CHANGE REGION: In the top-right corner, click the region dropdown
+  - Select: Asia Pacific (Mumbai) ap-south-1
+  - (This reduces latency from India)
+
+STEP 119: Create a New Cluster
+  - Click: Create cluster  (orange button)
+  - Fill in:
+
+    Cluster configuration:
+    * Cluster identifier: bda-redshift-cluster
+    * Choose free trial:  Click "I'll choose" and set manually below
+
+    Node configuration:
+    * Node type: dc2.large  (this is free tier eligible)
+    * Number of nodes: 1
+
+    Database configurations:
+    * Database name: dev
+    * Database port: 5439  (leave default)
+    * Admin user name: awsuser
+    * Admin user password: Awsuser@2025
+
+  - Scroll down and click: Create cluster
+  - Wait 5-10 minutes for Status to change to: Available
+
+STEP 120: Watch Cluster Status
+  - You will see the cluster with status: "Creating..."
+  - Refresh the page every 2-3 minutes
+  - Status goes: Creating → Modifying → Available
+  - When it shows "Available" with a green dot — it is ready!
+  - TAKE A SCREENSHOT of the Available cluster!
+
+--------------------------------------------------------------------------------
+SECTION 5.3 — CONFIGURE SECURITY (Allow Connections)
+--------------------------------------------------------------------------------
+
+STEP 121: Make Cluster Publicly Accessible
+  - Click on your cluster name: bda-redshift-cluster
+  - Click: Properties tab
+  - Scroll to "Network and security" section
+  - Click: Edit
+  - Set "Publicly accessible": Yes
+  - Click: Save changes
+
+STEP 122: Configure Security Group
+  - Still in Properties → Network and security
+  - Click on the VPC security group link
+  - It opens EC2 Security Groups
+  - Click: Inbound rules tab at the bottom
+  - Click: Edit inbound rules
+  - Click: Add rule
+    * Type: Redshift
+    * Port: 5439  (auto-filled)
+    * Source: My IP  (auto-fills your current IP)
+  - Click: Save rules
+
+--------------------------------------------------------------------------------
+SECTION 5.4 — CONNECT AND RUN QUERIES
+--------------------------------------------------------------------------------
+
+STEP 123: Open Query Editor v2
+  - Go back to Amazon Redshift in AWS Console
+  - Click on your cluster: bda-redshift-cluster
+  - Click: Query data  (orange button at top right)
+  - Click: Query in query editor v2
+  - A new browser tab opens
+
+STEP 124: Connect to the Database
+  - In Query Editor v2, look at the left panel
+  - You will see your cluster listed
+  - Click on: bda-redshift-cluster
+  - It asks for credentials:
+    * Authentication: Database user name and password
+    * Database: dev
+    * User name: awsuser
+    * Password: Awsuser@2025
+  - Click: Create connection
+  - If connected — you see the database tree on the left!
+
+STEP 125: Create an Employees Table
+  - Click the + button to open a new query tab
+  - Type this SQL:
+
+    CREATE TABLE employees (
+        emp_id    INTEGER      NOT NULL SORTKEY,
+        emp_name  VARCHAR(100),
+        dept      VARCHAR(50),
+        salary    DECIMAL(10,2),
+        join_date DATE
+    )
+    DISTSTYLE AUTO;
+
+  - Click: Run  (play button)
+  - Expected: "CREATE TABLE" success message
+
+STEP 126: Insert Data
+  Type and run:
+
+    INSERT INTO employees VALUES
+        (1, 'Alice',   'Engineering', 85000.00, '2023-01-15'),
+        (2, 'Bob',     'Analytics',   78000.00, '2022-06-01'),
+        (3, 'Charlie', 'Engineering', 95000.00, '2021-11-20'),
+        (4, 'Diana',   'HR',          62000.00, '2023-07-10'),
+        (5, 'Evan',    'Analytics',   81000.00, '2022-09-01');
+
+  Expected: "5 rows inserted"
+
+STEP 127: Run SELECT Queries
+  Type and run:
+
+    -- View all employees
+    SELECT * FROM employees ORDER BY salary DESC;
+
+  Then run:
+
+    -- Department summary
+    SELECT dept,
+           COUNT(*)        AS headcount,
+           AVG(salary)     AS avg_salary,
+           MAX(salary)     AS max_salary
+    FROM employees
+    GROUP BY dept
+    ORDER BY avg_salary DESC;
+
+  Then run:
+
+    -- System check query
+    SELECT current_date AS today,
+           current_user AS logged_in_as,
+           version()    AS db_version;
+
+  TAKE SCREENSHOTS of query results for your practical file!
+
+--------------------------------------------------------------------------------
+SECTION 5.5 — AWS CLI FOR REDSHIFT (Optional but Impressive)
+--------------------------------------------------------------------------------
+
+STEP 128: Install AWS CLI on Ubuntu
+  Go back to your Ubuntu terminal and type:
+
+    sudo apt install awscli -y
+
+  Verify:
+
+    aws --version
+
+STEP 129: Get AWS Access Keys
+  - Go to AWS Console → click your account name (top right)
+  - Click: Security Credentials
+  - Scroll down to: Access keys
+  - Click: Create access key
+  - Select: Command Line Interface (CLI)
+  - Check the confirmation box → Click: Next
+  - Click: Create access key
+  - IMPORTANT: Copy/download the Access Key ID and Secret Access Key NOW
+  - You cannot see the Secret Access Key again after closing this page!
+
+STEP 130: Configure AWS CLI in Ubuntu
+  In the Ubuntu terminal, type:
+
+    aws configure
+
+  Enter each value:
+    AWS Access Key ID: [paste your Access Key ID]
+    AWS Secret Access Key: [paste your Secret Access Key]
+    Default region name: ap-south-1
+    Default output format: json
+
+STEP 131: Execute SQL via AWS CLI
+  Type (all on separate lines — it is one command):
+
+    aws redshift-data execute-statement \
+      --cluster-identifier bda-redshift-cluster \
+      --database dev \
+      --db-user awsuser \
+      --sql "SELECT current_date;" \
+      --region ap-south-1
+
+  Expected output (a JSON with a StatementId):
+    {
+        "CreatedAt": "...",
+        "Database": "dev",
+        "Id": "2f6b1a2d-9f63-4b11-8c61-1d9fefc1c111",
+        "ClusterIdentifier": "bda-redshift-cluster"
+    }
+
+  Copy the "Id" value from the output, then run:
+
+    aws redshift-data get-statement-result \
+      --id 2f6b1a2d-9f63-4b11-8c61-1d9fefc1c111 \
+      --region ap-south-1
+
+  This matches the sample output shown in your assignment PDF!
+
+--------------------------------------------------------------------------------
+SECTION 5.6 — IMPORTANT: DELETE CLUSTER WHEN DONE
+--------------------------------------------------------------------------------
+
+STEP 132: Delete the Redshift Cluster (DO THIS AFTER PRACTICAL IS DONE)
+  A dc2.large Redshift cluster costs money after the free trial ends.
+  ALWAYS delete it when you are done.
+
+  - Go to: Amazon Redshift → Clusters
+  - Select: bda-redshift-cluster
+  - Click: Actions → Delete
+  - UNCHECK: "Create final snapshot" (not needed for practice)
+  - Type: delete  in the confirmation box
+  - Click: Delete cluster
+
+================================================================================
+  PART 6 — ORAL EXAM QUESTIONS AND MODEL ANSWERS
+================================================================================
+
+  Read these answers carefully and understand them.
+  During the exam, explain in your own words.
+  Use technical terms — examiners want to see you know the concepts.
+
+--------------------------------------------------------------------------------
+Q1: How did you configure and set up Hadoop within the Cloudera/BigQuery environment?
+--------------------------------------------------------------------------------
+
+ANSWER:
+I set up Apache Hadoop 3.3.6 in pseudo-distributed mode on Ubuntu 22.04 LTS
+running inside VirtualBox. The setup involved the following key steps:
+
+1. Installed Java JDK 8 as Hadoop requires Java to run.
+
+2. Configured passwordless SSH to localhost — Hadoop daemons communicate with
+   each other using SSH even on a single machine.
+
+3. Set environment variables in .bashrc:
+   - JAVA_HOME pointing to the JDK location
+   - HADOOP_HOME pointing to /usr/local/hadoop
+   - Added Hadoop's bin and sbin directories to the PATH
+
+4. Edited 5 configuration files in /usr/local/hadoop/etc/hadoop/:
+   - hadoop-env.sh   : Set JAVA_HOME for Hadoop scripts
+   - core-site.xml   : Set fs.defaultFS = hdfs://localhost:9000
+   - hdfs-site.xml   : Set replication=1, namenode and datanode directories
+   - mapred-site.xml : Set MapReduce framework = yarn
+   - yarn-site.xml   : Set auxiliary shuffle service
+
+5. Created HDFS storage directories for namenode and datanode.
+
+6. Formatted the NameNode using: hdfs namenode -format
+
+7. Started HDFS using start-dfs.sh and YARN using start-yarn.sh.
+
+8. Verified all 4 daemons (NameNode, DataNode, ResourceManager, NodeManager)
+   are running using the jps command.
+
+9. Tested HDFS with commands: hdfs dfs -put, -ls, -cat, dfsadmin -report.
+
+10. Verified through web browser at localhost:9870 (HDFS UI) and localhost:8088 (YARN UI).
+
+--------------------------------------------------------------------------------
+Q2: What are the key advantages of using Cloudera or BigQuery for hosting Hadoop?
+--------------------------------------------------------------------------------
+
+ANSWER — CLOUDERA:
+
+1. Centralized Management: Cloudera Manager provides a single web-based GUI to
+   manage all Hadoop ecosystem services (HDFS, YARN, Hive, Spark, HBase).
+
+2. Enterprise Security: Built-in Kerberos authentication, Apache Ranger for
+   fine-grained authorization, and Apache Atlas for data governance and lineage.
+
+3. Pre-tested Components: All Cloudera Distribution for Hadoop (CDH) components
+   are tested to work together — no version compatibility issues.
+
+4. Auto-configuration: Cloudera Manager automatically tunes Hadoop configuration
+   parameters based on the cluster hardware specifications.
+
+5. Rolling Upgrades: Can upgrade the cluster to newer versions with zero downtime.
+
+6. Visual Monitoring: Charts and dashboards showing CPU, memory, HDFS usage,
+   running jobs — all from one screen.
+
+ANSWER — GOOGLE CLOUD BIGQUERY:
+
+1. Fully Serverless: No infrastructure to manage. Google automatically handles
+   all scaling, maintenance, and patching.
+
+2. Petabyte Scale Performance: Queries on terabytes of data complete in seconds
+   using Google's Dremel query engine and columnar storage format.
+
+3. Pay-per-Query Pricing: Only pay for the actual data scanned by your queries.
+   No idle server costs when not running queries.
+
+4. Standard SQL: Use familiar ANSI SQL — no need to learn Java MapReduce programming.
+
+5. Built-in ML with BigQuery ML: Train machine learning models directly using
+   SQL queries without moving data to a separate ML platform.
+
+6. Seamless GCP Integration: Works natively with Google Cloud Storage, Dataflow,
+   Looker Studio, and other GCP services.
+
+--------------------------------------------------------------------------------
+Q3: How did you ensure data integrity and security?
+--------------------------------------------------------------------------------
+
+ANSWER:
+
+DATA INTEGRITY:
+
+1. HDFS Block Replication:
+   HDFS stores 3 copies of every data block across different DataNodes (default
+   replication factor = 3). If 2 nodes fail, data is still safe on the 3rd.
+   In our lab setup we used replication=1 since we have only 1 node.
+
+2. CRC-32 Checksums:
+   HDFS automatically calculates and verifies a CRC-32 checksum for every data
+   block. When reading, if checksum fails — the corrupted block is automatically
+   re-fetched from a healthy replica.
+
+3. Delta Lake ACID Transactions (Databricks):
+   The Delta table format in Databricks provides ACID transactions. This means
+   write operations are atomic — data is never left in a partial/corrupt state
+   even if the operation fails midway.
+
+4. Snowflake Time Travel:
+   Snowflake retains historical versions of all data for up to 90 days. This
+   allows recovery from accidental DELETE or DROP TABLE operations.
+
+SECURITY MEASURES:
+
+1. IAM Roles (BigQuery):
+   Used Identity and Access Management to assign role-based permissions.
+   Data Viewer role for read-only analysts, BigQuery Admin only for the owner.
+
+2. Service Account Keys (BigQuery):
+   API access to BigQuery uses JSON service account keys, not personal passwords.
+
+3. Network Policies (Snowflake):
+   IP whitelisting ensures only specific IP addresses can connect to Snowflake.
+   Set up using: Admin → Security → Network Policies.
+
+4. VPC Security Groups (Redshift):
+   Configured AWS Security Group to allow Redshift port 5439 ONLY from our IP.
+
+5. Encryption:
+   All 5 platforms encrypt data:
+   - In Transit: TLS/SSL (HTTPS) for all API calls and connections
+   - At Rest: AES-256 encryption for stored data by default
+
+6. Role-Based Access Control (Snowflake):
+   Created DATA_ANALYST role with SELECT-only access. Admin operations restricted
+   to SYSADMIN and ACCOUNTADMIN roles.
+
+--------------------------------------------------------------------------------
+Q4: What are the key features of the Databricks Lakehouse Platform?
+--------------------------------------------------------------------------------
+
+ANSWER:
+
+The Databricks Lakehouse Platform combines the best features of Data Lakes
+(cheap, flexible storage) with Data Warehouses (fast, reliable SQL analytics).
+Key features:
+
+1. DELTA LAKE — ACID Transactions:
+   Delta Lake is an open storage format that adds ACID transactions to data lakes.
+   It supports Atomicity, Consistency, Isolation, Durability — making data
+   operations safe even if the system crashes midway.
+   It also supports: schema enforcement, schema evolution, and time travel.
+
+2. UNIFIED ANALYTICS PLATFORM:
+   One platform for three different workloads:
+   - Data Engineering: ETL pipelines using Python/Spark
+   - Data Science: ML model training and experiment tracking with MLflow
+   - SQL Analytics: Business intelligence queries using Databricks SQL
+   No need to copy data between different systems.
+
+3. APACHE SPARK ENGINE:
+   Built on Apache Spark for distributed in-memory processing.
+   Spark is up to 100x faster than Hadoop MapReduce for iterative workloads.
+   Supports Python (PySpark), SQL, Scala, and R.
+
+4. MLFLOW INTEGRATION:
+   Built-in MLflow for complete ML lifecycle management:
+   - Track: Log parameters, metrics, artifacts for each experiment run
+   - Register: Store and version trained models in a model registry
+   - Deploy: Serve models as REST APIs
+
+5. COLLABORATIVE NOTEBOOKS:
+   Multiple users can work in the same notebook simultaneously (like Google Docs).
+   Supports Python, SQL, Scala, R — all in the same notebook.
+   Real-time visualization of query results and data plots.
+
+6. AUTO-SCALING CLUSTERS:
+   Clusters automatically scale up when workload is heavy and scale down (or
+   suspend) when idle — optimizing costs automatically.
+
+7. UNITY CATALOG:
+   Centralized governance layer for all data assets across clouds.
+   Single place to manage permissions for tables, files, and ML models.
+
+================================================================================
+  PART 7 — QUICK REFERENCE — KEY COMMANDS CHEAT SHEET
+================================================================================
+
+  ---- HADOOP ----
+
+  Start Hadoop:
+    start-dfs.sh && start-yarn.sh
+
+  Stop Hadoop:
+    stop-yarn.sh && stop-dfs.sh
+
+  Check running daemons:
+    jps
+
+  HDFS commands:
+    hdfs dfs -ls /                        List HDFS root
+    hdfs dfs -mkdir -p /path/to/dir       Create directory
+    hdfs dfs -put localfile /hdfs/path/   Upload file
+    hdfs dfs -get /hdfs/path/file .       Download file
+    hdfs dfs -cat /hdfs/path/file         Read file contents
+    hdfs dfs -rm /hdfs/path/file          Delete file
+    hdfs dfs -du -h /path/                Show directory sizes
+    hdfs dfsadmin -report                 Cluster health report
+    hdfs namenode -format                 Format NameNode (ONCE only!)
+
+  Web UIs:
+    http://localhost:9870    HDFS NameNode UI
+    http://localhost:8088    YARN ResourceManager UI
+
+  ---- BIGQUERY CLI ----
+
+    gcloud init                           Initialize and login
+    gcloud config set project PROJECT_ID  Switch project
+    gcloud services enable bigquery.googleapis.com
+    bq ls                                 List datasets
+    bq mk --dataset PROJECT:DATASET       Create dataset
+    bq rm --dataset PROJECT:DATASET       Delete dataset
+    bq query --use_legacy_sql=false 'SQL' Run a query
+
+  ---- SNOWFLAKE SQL ----
+
+    SHOW WAREHOUSES;
+    SHOW DATABASES;
+    SHOW TABLES;
+    SELECT CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA();
+    ALTER WAREHOUSE DEMO_WH RESUME;       Start a suspended warehouse
+    ALTER WAREHOUSE DEMO_WH SUSPEND;      Suspend warehouse to save credits
+    SELECT * FROM TABLE AT (OFFSET => -300);  Time travel 5 min back
+    UNDROP TABLE tablename;               Restore dropped table
+
+  ---- USEFUL LINUX COMMANDS ----
+
+    pwd                     Show current directory
+    ls -la                  List files with details
+    cd /path/to/folder      Change directory
+    mkdir -p folder/name    Create directory (and parents)
+    cat filename            Show file contents
+    nano filename           Edit file (Ctrl+X to exit)
+    sudo command            Run as administrator
+    sudo apt install pkg    Install a package
+    which command           Find where a command is located
+    echo $VARIABLE          Show environment variable value
+    source ~/.bashrc        Reload bash configuration
+
+================================================================================
+  TROUBLESHOOTING — COMMON PROBLEMS AND SOLUTIONS
+================================================================================
+
+PROBLEM: "hdfs: command not found" after Step 32
+SOLUTION:
+  - Run: source ~/.bashrc
+  - Check ~/.bashrc has the PATH line with $HADOOP_HOME/bin
+  - Run: echo $PATH and make sure /usr/local/hadoop/bin appears
+
+PROBLEM: jps shows only "Jps" — no NameNode/DataNode
+SOLUTION:
+  - Check logs: cat /usr/local/hadoop/logs/hadoop-student-namenode-*.log
+  - Make sure you created directories: mkdir -p ~/hdfs/namenode ~/hdfs/datanode
+  - Delete old data and reformat:
+      rm -rf ~/hdfs/namenode/* ~/hdfs/datanode/* ~/hadooptmpdata/*
+      hdfs namenode -format
+      start-dfs.sh
+
+PROBLEM: SSH asks for password when running start-dfs.sh
+SOLUTION:
+  - Redo Steps 21-23:
+      ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+      cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+      chmod 0600 ~/.ssh/authorized_keys
+      ssh localhost   (type yes, should NOT ask for password)
+
+PROBLEM: "Permission denied" errors in Hadoop
+SOLUTION:
+  - Run: sudo chown -R $USER:$USER /usr/local/hadoop
+  - Run: sudo chown -R $USER:$USER ~/hdfs ~/hadooptmpdata
+
+PROBLEM: VirtualBox VM is very slow
+SOLUTION:
+  - Allocate more RAM (at least 4 GB)
+  - Allocate more CPU cores (at least 2)
+  - Enable VT-x/AMD-V in VirtualBox Settings → System → Acceleration
+  - Install Guest Additions (Step 13)
+
+PROBLEM: Databricks cluster won't start
+SOLUTION:
+  - Community Edition clusters can take 5-7 minutes
+  - If it shows "Error" — click Terminate then Start again
+  - Make sure you selected Community Edition during signup
+
+PROBLEM: Cannot connect to Snowflake Query Editor
+SOLUTION:
+  - Make sure you are using the right URL (check activation email)
+  - Try a different browser
+  - Clear browser cache and try again
+
+PROBLEM: Redshift "Unable to connect" error
+SOLUTION:
+  - Cluster must be in "Available" state (not "Creating" or "Paused")
+  - Check Security Group allows your IP on port 5439
+  - Make sure "Publicly accessible" is set to Yes
+
+================================================================================
+  PART 8 — WHAT TO SUBMIT / SCREENSHOT CHECKLIST
+================================================================================
+
+  Take screenshots of each of these for your practical journal:
+
+  HADOOP:
+  [ ] jps output showing all 4 daemons (NameNode, DataNode, ResourceManager, NodeManager)
+  [ ] http://localhost:9870 — HDFS NameNode Web UI (showing Live Nodes: 1)
+  [ ] http://localhost:8088 — YARN ResourceManager Web UI
+  [ ] Terminal output of: hdfs dfs -ls /user/student/input/
+  [ ] Terminal output of: hdfs dfsadmin -report
+
+  BIGQUERY:
+  [ ] BigQuery Studio in browser with your dataset visible
+  [ ] Query results showing students table data
+  [ ] Terminal: bq ls output
+  [ ] IAM page showing access roles
+
+  DATABRICKS:
+  [ ] Cluster in "Running" state
+  [ ] Cell 2 output showing DataFrame table
+  [ ] Cell 4 output showing "Delta table saved successfully!"
+  [ ] SQL query result from Cell 5
+
+  SNOWFLAKE:
+  [ ] Snowsight dashboard after login
+  [ ] Worksheet with SELECT * FROM STUDENTS result
+  [ ] Role and user creation success messages
+  [ ] Time travel query result (UNDROP TABLE demo)
+
+  REDSHIFT:
+  [ ] Cluster in "Available" state
+  [ ] Query Editor v2 connected to database
+  [ ] employees table query results
+  [ ] AWS CLI execute-statement output (if done)
+

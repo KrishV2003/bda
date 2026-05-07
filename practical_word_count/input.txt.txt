@@ -1,0 +1,3 @@
+hadoop is big data
+hadoop is useful
+big data is powerful

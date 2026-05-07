@@ -1,0 +1,123 @@
+1) Download MongoDB
+   -- https://www.mongodb.com/try/download/community
+2) Verify Installation
+   -- Open CMD
+   -- Type: mongosh
+   If mongosh is correctly install the we see 
+   -- MongoDB Shell: test>
+   If not install mongosh the install it:
+   a) MongoDB Shell download
+      -- https://www.mongodb.com/try/download/shell
+3) Create Database Folder
+   -- D:\data\db  or  C:\data\db
+4) Start MongoDB Server
+   -- Go to D:\MongoDB\bin or C:\Program Files\MongoDB\Server\8.0\bin then type in address bar cmd and press Enter
+   -- Run: mongod --dbpath D:\data\db  or  mongod --dbpath C:\data\db
+   Note: DO NOT CLOSE THIS WINDOW.
+5) Open MongoDB Shell
+   -- Open Another CMD: in D:\mongosh\bin  or  C:\mongosh\bin
+   -- Type: mongosh
+6) MongoDB CRUD Practical...
+    
+ --------------------------------------------------------------------------------
+MongoDB Practical on Ubuntu (Step-by-Step)
+Step 1: Install MongoDB Community Edition
+
+Open Terminal and run these commands one by one.
+
+A) Update Ubuntu packages
+sudo apt update
+B) Install required packages
+sudo apt install gnupg curl -y
+C) Import MongoDB GPG Key
+curl -fsSL https://pgp.mongodb.com/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
+D) Add MongoDB Repository
+lsb_release -a
+
+For Ubuntu 22.04:
+
+echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+
+For Ubuntu 24.04:
+
+echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+E) Update again
+sudo apt update
+F) Install MongoDB
+sudo apt install mongodb-org -y
+Step 2: Start MongoDB Service
+
+Start MongoDB server:
+
+sudo systemctl start mongod
+
+Enable automatic start on boot:
+
+sudo systemctl enable mongod
+
+Check status:
+
+sudo systemctl status mongod
+
+If running correctly, you will see:
+
+active (running)
+Step 3: Verify Installation
+
+Open terminal and type:
+
+mongosh
+
+If successful:
+
+test>
+
+This means MongoDB shell is working.
+
+Step 4: Create Database
+
+Inside mongosh:
+
+use myNewDatabase
+
+Output:
+
+switched to db myNewDatabase
+Step 5: Create Collection and Insert Document
+db.myNewCollection.insertOne({
+   name: "John Doe",
+   age: 30
+})
+
+MongoDB automatically creates:
+
+Database
+Collection
+Step 6: CRUD Operations
+1. CREATE (Insert)
+db.myNewCollection.insertOne({
+   name: "Jane Doe",
+   age: 25
+})
+2. READ (Query)
+
+Find one document:
+
+db.myNewCollection.findOne({
+   name: "John Doe"
+})
+
+Find all documents:
+
+db.myNewCollection.find()
+3. UPDATE
+db.myNewCollection.updateOne(
+   { name: "John Doe" },
+   { $set: { age: 31 } }
+)
+4. DELETE
+db.myNewCollection.deleteOne({
+   name: "Jane Doe"
+})
+Step 7: Exit Mongo Shell
+exit
