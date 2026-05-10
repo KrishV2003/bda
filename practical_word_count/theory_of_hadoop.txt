@@ -1,0 +1,1181 @@
+# Complete Hadoop Theory — From Start to End
+
+Hadoop is one of the most important technologies in the world of **Big Data**.
+It was created to solve a very big problem:
+
+> “How can we store and process massive amounts of data efficiently across many computers?”
+
+The PDF you uploaded already introduces the basic Hadoop and MapReduce concepts. 
+
+Now let us deeply understand **everything** step by step from absolute beginning to advanced internal working.
+
+---
+
+# 1. What is Big Data?
+
+Before Hadoop, companies started generating huge amounts of data from:
+
+* Social media
+* Banking systems
+* Sensors
+* IoT devices
+* YouTube
+* E-commerce
+* Mobile apps
+* Search engines
+
+Traditional systems could not handle this huge data.
+
+This massive data is called **Big Data**.
+
+---
+
+# 2. Problems with Traditional Systems
+
+Suppose you have:
+
+* 500 TB of data
+* Millions of users
+* Continuous incoming data
+
+A single computer faces problems:
+
+| Problem            | Explanation                            |
+| ------------------ | -------------------------------------- |
+| Storage Limit      | One machine cannot store everything    |
+| Slow Processing    | CPU becomes overloaded                 |
+| Expensive Hardware | Powerful servers cost too much         |
+| Failure Risk       | If one machine crashes → all data lost |
+| Scalability Issues | Difficult to increase performance      |
+
+So companies needed:
+
+* Distributed storage
+* Parallel processing
+* Fault tolerance
+* Scalability
+* Low cost
+
+This is where Hadoop came.
+
+---
+
+# 3. What is Hadoop?
+
+## Definition
+
+Apache Hadoop is an open-source framework used for:
+
+* Storing huge datasets
+* Processing huge datasets
+* Distributed computing
+* Fault-tolerant systems
+
+It processes data across multiple computers called a **cluster**.
+
+---
+
+# 4. Main Idea of Hadoop
+
+Instead of:
+
+* One huge powerful computer
+
+Hadoop uses:
+
+* Thousands of normal cheap computers
+
+This is called:
+
+# Distributed Computing
+
+---
+
+# 5. Real Life Analogy
+
+Imagine:
+
+You have:
+
+* 10,000 books to count words from
+
+### Traditional System
+
+One person reads all books.
+
+Very slow.
+
+### Hadoop System
+
+1000 people each read 10 books simultaneously.
+
+Very fast.
+
+This is exactly what Hadoop does.
+
+---
+
+# 6. Core Components of Hadoop
+
+Hadoop mainly has:
+
+```text
+Hadoop
+│
+├── HDFS
+├── MapReduce
+├── YARN
+└── Hadoop Common
+```
+
+---
+
+# 7. Hadoop Ecosystem
+
+## A) HDFS
+
+Storage layer
+
+## B) MapReduce
+
+Processing engine
+
+## C) YARN
+
+Resource management
+
+## D) Hadoop Common
+
+Shared libraries/utilities
+
+---
+
+# 8. HDFS (Hadoop Distributed File System)
+
+# What is HDFS?
+
+HDFS is Hadoop’s storage system.
+
+It stores files across many machines.
+
+---
+
+# 9. Why HDFS?
+
+Normal file systems fail for huge data because:
+
+* Single disk limitation
+* Failure risk
+* Slow access
+
+HDFS solves this using:
+
+* Distributed storage
+* Replication
+* Parallel access
+
+---
+
+# 10. HDFS Architecture
+
+```text
+                NameNode
+                    |
+     --------------------------------
+     |              |              |
+ DataNode1      DataNode2      DataNode3
+```
+
+---
+
+# 11. NameNode
+
+The master node.
+
+Stores:
+
+* Metadata
+* File names
+* Block locations
+* Permissions
+
+Important:
+
+> NameNode does NOT store actual data.
+
+It stores:
+
+* Information ABOUT data.
+
+---
+
+# 12. DataNode
+
+Worker nodes.
+
+Actually store:
+
+* File blocks
+
+---
+
+# 13. How HDFS Stores Files
+
+Suppose file size:
+
+```text
+1 GB
+```
+
+HDFS splits file into blocks.
+
+Default block size:
+
+```text
+128 MB
+```
+
+So file becomes:
+
+```text
+Block1
+Block2
+Block3
+...
+```
+
+Each block stored on different machines.
+
+---
+
+# 14. Replication
+
+To avoid data loss:
+
+HDFS creates copies.
+
+Example:
+Replication factor = 3
+
+```text
+Block1 → stored on 3 machines
+```
+
+If one machine fails:
+
+* Data still safe.
+
+---
+
+# 15. Fault Tolerance
+
+This is Hadoop’s biggest strength.
+
+If a node crashes:
+
+* Hadoop automatically uses replica copy.
+
+No data loss.
+
+---
+
+# 16. Scalability
+
+Need more storage?
+
+Just add more machines.
+
+No need to replace old system.
+
+---
+
+# 17. What is MapReduce?
+
+Now storage alone is not enough.
+
+We must process huge data.
+
+This is done by:
+
+# MapReduce
+
+---
+
+# 18. What is MapReduce?
+
+A distributed programming model for processing large datasets.
+
+Created by:
+
+* Google
+
+Implemented in:
+
+* Hadoop
+
+---
+
+# 19. Why MapReduce?
+
+Suppose:
+
+* 100 TB log file
+
+Single machine:
+
+* Very slow
+
+MapReduce:
+
+* Splits work across many nodes
+* Parallel execution
+
+---
+
+# 20. Core Phases of MapReduce
+
+MapReduce mainly has:
+
+```text
+Input
+  ↓
+Splitting
+  ↓
+Mapping
+  ↓
+Shuffle
+  ↓
+Sort
+  ↓
+Reduce
+  ↓
+Output
+```
+
+Now we deeply understand EACH phase.
+
+---
+
+# 21. Input Splitting
+
+Huge input file divided into chunks.
+
+Example:
+
+```text
+1 TB file
+```
+
+Split into:
+
+```text
+128 MB blocks
+```
+
+Each mapper processes one split.
+
+---
+
+# 22. Mapper Phase
+
+Mapper transforms input data into key-value pairs.
+
+---
+
+# Example
+
+Sentence:
+
+```text
+An elephant is an animal
+```
+
+Mapper outputs:
+
+```text
+(an,1)
+(elephant,1)
+(is,1)
+(an,1)
+(animal,1)
+```
+
+Exactly like your PDF explains. 
+
+---
+
+# 23. Why Key-Value Pairs?
+
+Because Hadoop processes everything as:
+
+```text
+<Key, Value>
+```
+
+This structure makes:
+
+* grouping
+* sorting
+* parallel processing
+
+easy.
+
+---
+
+# 24. Internal Working of Mapper
+
+Each mapper:
+
+1. Reads split
+2. Processes records
+3. Generates intermediate output
+
+---
+
+# 25. Mapper Parallelism
+
+Suppose:
+
+100 blocks
+
+Then:
+
+* 100 mappers may run simultaneously.
+
+Huge speed improvement.
+
+---
+
+# 26. Combiner Phase
+
+Optional mini-reducer.
+
+Runs after mapper.
+
+Purpose:
+
+* Reduce network traffic.
+
+---
+
+# Example
+
+Mapper output:
+
+```text
+(cat,1)
+(cat,1)
+(cat,1)
+```
+
+Combiner converts:
+
+```text
+(cat,3)
+```
+
+before sending to reducer.
+
+This saves bandwidth.
+
+---
+
+# 27. Shuffle Phase
+
+# MOST IMPORTANT CONCEPT
+
+Shuffle transfers mapper output to reducers.
+
+---
+
+# What Happens?
+
+Hadoop groups same keys together.
+
+Example:
+
+Mapper outputs:
+
+```text
+(cat,1)
+(dog,1)
+(cat,1)
+```
+
+Shuffle groups:
+
+```text
+(cat,[1,1])
+(dog,[1])
+```
+
+---
+
+# 28. Why Shuffle Needed?
+
+Reducer needs:
+
+* all same keys together.
+
+Without shuffle:
+
+* counting impossible.
+
+---
+
+# 29. Internal Working of Shuffle
+
+Shuffle performs:
+
+## A) Partitioning
+
+Decides:
+
+* which reducer gets which key
+
+Example:
+
+```text
+hash(key) % reducers
+```
+
+---
+
+## B) Copying
+
+Transfers mapper output over network.
+
+---
+
+## C) Merging
+
+Combines sorted data.
+
+---
+
+## D) Grouping
+
+Groups same keys together.
+
+---
+
+# 30. Sorting Phase
+
+After shuffle:
+Keys are automatically sorted.
+
+Example:
+
+Before sort:
+
+```text
+dog
+apple
+cat
+```
+
+After sort:
+
+```text
+apple
+cat
+dog
+```
+
+---
+
+# 31. Why Sorting Important?
+
+Sorting helps:
+
+* efficient grouping
+* organized processing
+* faster reduce phase
+
+---
+
+# 32. Reducer Phase
+
+Reducer receives:
+
+```text
+(key, list_of_values)
+```
+
+Example:
+
+```text
+(cat,[1,1,1])
+```
+
+Reducer performs aggregation.
+
+Output:
+
+```text
+(cat,3)
+```
+
+---
+
+# 33. Complete Word Count Flow
+
+Input:
+
+```text
+cat dog cat
+```
+
+---
+
+## Mapper Output
+
+```text
+(cat,1)
+(dog,1)
+(cat,1)
+```
+
+---
+
+## Shuffle + Sort
+
+```text
+(cat,[1,1])
+(dog,[1])
+```
+
+---
+
+## Reducer Output
+
+```text
+(cat,2)
+(dog,1)
+```
+
+---
+
+# 34. Why MapReduce is Powerful
+
+Because:
+
+* Parallel processing
+* Automatic fault handling
+* Distributed execution
+* Scalability
+
+---
+
+# 35. Internal Architecture of MapReduce
+
+```text
+Client
+  |
+JobTracker / ResourceManager
+  |
+TaskTrackers / NodeManagers
+  |
+Mappers & Reducers
+```
+
+Modern Hadoop uses:
+
+* YARN
+
+Older Hadoop used:
+
+* JobTracker
+* TaskTracker
+
+---
+
+# 36. YARN
+
+# Yet Another Resource Negotiator
+
+Manages:
+
+* CPU
+* Memory
+* Scheduling
+
+---
+
+# 37. YARN Components
+
+## ResourceManager
+
+Master scheduler.
+
+## NodeManager
+
+Runs on each node.
+
+## ApplicationMaster
+
+Manages one application.
+
+---
+
+# 38. Data Locality
+
+Very important optimization.
+
+Instead of:
+
+* moving huge data to program
+
+Hadoop:
+
+* moves program near data.
+
+This reduces network usage.
+
+---
+
+# 39. Fault Tolerance in MapReduce
+
+If mapper fails:
+
+* task restarted on another node.
+
+If reducer fails:
+
+* reducer restarted.
+
+Automatic recovery.
+
+---
+
+# 40. Hadoop Cluster Types
+
+## A) Standalone Mode
+
+Single machine.
+
+## B) Pseudo-distributed Mode
+
+One machine simulates cluster.
+
+## C) Fully Distributed Mode
+
+Real cluster.
+
+---
+
+# 41. Hadoop Daemons
+
+Important background services.
+
+---
+
+## HDFS Daemons
+
+### NameNode
+
+Metadata manager.
+
+### DataNode
+
+Stores blocks.
+
+### Secondary NameNode
+
+Checkpoint helper.
+
+---
+
+## YARN Daemons
+
+### ResourceManager
+
+Resource allocation.
+
+### NodeManager
+
+Runs containers.
+
+---
+
+# 42. Containers in Hadoop
+
+Small isolated execution environments.
+
+Contain:
+
+* CPU
+* RAM
+* resources
+
+---
+
+# 43. Hadoop Workflow
+
+```text
+Store file in HDFS
+        ↓
+Split file
+        ↓
+Run mappers
+        ↓
+Shuffle & Sort
+        ↓
+Run reducers
+        ↓
+Store output in HDFS
+```
+
+---
+
+# 44. Advantages of Hadoop
+
+| Advantage       | Explanation           |
+| --------------- | --------------------- |
+| Scalability     | Add more nodes easily |
+| Fault Tolerance | Data replication      |
+| Parallelism     | Faster processing     |
+| Cost Effective  | Commodity hardware    |
+| Reliability     | Automatic recovery    |
+
+---
+
+# 45. Disadvantages of Hadoop
+
+| Disadvantage        | Explanation              |
+| ------------------- | ------------------------ |
+| Slow for Small Data | Designed for big data    |
+| Batch Processing    | Not real-time            |
+| Complex Ecosystem   | Many tools               |
+| High Latency        | Slow interactive queries |
+
+---
+
+# 46. Hadoop Ecosystem Tools
+
+Very important.
+
+---
+
+# 47. Hive
+
+Apache Hive
+
+SQL-like querying on Hadoop.
+
+Uses:
+
+```sql
+SELECT * FROM table;
+```
+
+instead of Java MapReduce.
+
+---
+
+# 48. Pig
+
+Apache Pig
+
+Simplifies data processing using Pig Latin.
+
+---
+
+# 49. HBase
+
+Apache HBase
+
+NoSQL database on Hadoop.
+
+---
+
+# 50. Sqoop
+
+Apache Sqoop
+
+Transfers data:
+
+* SQL ↔ Hadoop
+
+---
+
+# 51. Flume
+
+Apache Flume
+
+Collects streaming logs.
+
+---
+
+# 52. Spark vs Hadoop
+
+Apache Spark is newer and faster.
+
+---
+
+| Hadoop MapReduce | Spark             |
+| ---------------- | ----------------- |
+| Disk-based       | Memory-based      |
+| Slower           | Faster            |
+| Batch processing | Real-time capable |
+
+---
+
+# 53. Why Hadoop Became Revolutionary
+
+Before Hadoop:
+
+* Big data processing extremely expensive.
+
+After Hadoop:
+
+* Cheap distributed computing possible.
+
+Companies like:
+
+* Yahoo
+* Facebook
+* Amazon
+* Netflix
+
+used Hadoop heavily.
+
+---
+
+# 54. Real World Uses of Hadoop
+
+| Industry     | Use                    |
+| ------------ | ---------------------- |
+| Banking      | Fraud detection        |
+| E-commerce   | Recommendation systems |
+| Healthcare   | Patient analytics      |
+| Telecom      | Call data analysis     |
+| Social Media | User behavior analysis |
+
+---
+
+# 55. Deep Internal Working Example
+
+Suppose:
+
+```text
+1 TB file
+```
+
+---
+
+## Step 1: HDFS Storage
+
+Split into:
+
+```text
+128 MB blocks
+```
+
+Stored across nodes.
+
+---
+
+## Step 2: Job Submission
+
+Client submits MapReduce job.
+
+---
+
+## Step 3: Resource Allocation
+
+YARN allocates containers.
+
+---
+
+## Step 4: Mapper Execution
+
+Each mapper processes one block.
+
+---
+
+## Step 5: Intermediate Output
+
+Mapper generates:
+
+```text
+(key,value)
+```
+
+---
+
+## Step 6: Shuffle
+
+Transfers data across network.
+
+Groups same keys.
+
+---
+
+## Step 7: Sort
+
+Keys sorted.
+
+---
+
+## Step 8: Reduce
+
+Aggregation performed.
+
+---
+
+## Step 9: Final Output
+
+Stored in HDFS.
+
+---
+
+# 56. Why Hadoop Uses Commodity Hardware
+
+Because:
+
+* Cheap
+* Easily replaceable
+* Scalable
+
+Hadoop assumes:
+
+> Machines WILL fail.
+
+So it builds fault tolerance into system.
+
+---
+
+# 57. Important Concepts Summary
+
+| Concept       | Meaning                    |
+| ------------- | -------------------------- |
+| HDFS          | Distributed storage        |
+| MapReduce     | Distributed processing     |
+| Mapper        | Generates key-value pairs  |
+| Shuffle       | Groups same keys           |
+| Sort          | Orders keys                |
+| Reducer       | Aggregates results         |
+| YARN          | Resource management        |
+| Replication   | Data copies                |
+| Data Locality | Move computation near data |
+
+---
+
+# 58. Very Important Interview/Exam Concepts
+
+---
+
+## Difference Between Mapper and Reducer
+
+| Mapper                       | Reducer                  |
+| ---------------------------- | ------------------------ |
+| Processes input              | Processes grouped output |
+| Generates intermediate pairs | Aggregates results       |
+| Parallel execution           | Final processing         |
+
+---
+
+## What is Shuffle?
+
+Automatic phase:
+
+* transfers mapper output
+* groups keys
+* sorts data
+
+---
+
+## Why Sorting Required?
+
+Reducer requires grouped ordered keys.
+
+---
+
+## What Happens if Node Fails?
+
+Replica copy used.
+Task restarted.
+
+---
+
+## Why Hadoop is Fault Tolerant?
+
+Because of:
+
+* replication
+* automatic task recovery
+
+---
+
+# 59. Lifecycle of a MapReduce Job
+
+```text
+Input File
+   ↓
+HDFS Splitting
+   ↓
+Mapper
+   ↓
+Combiner
+   ↓
+Partitioner
+   ↓
+Shuffle
+   ↓
+Sort
+   ↓
+Reducer
+   ↓
+Final Output
+```
+
+---
+
+# 60. Final Understanding
+
+Hadoop is fundamentally about:
+
+## 1. Distributed Storage
+
+(HDFS)
+
+AND
+
+## 2. Distributed Processing
+
+(MapReduce)
+
+It allows:
+
+* huge-scale data processing
+* parallel execution
+* automatic recovery
+* scalable architecture
+
+using clusters of inexpensive machines.
+
+---
+
+# 61. Simple One-Line Memory Trick
+
+# HDFS stores data.
+
+# MapReduce processes data.
+
+# YARN manages resources.
+
+---
+
+# 62. Connection with Your PDF
+
+Your uploaded assignment mainly focuses on:
+
+* WordCount program
+* Mapper
+* Reducer
+* Shuffle & Sort
+* Key-value pairs
+* Parallel processing
+
+All those concepts are the core foundation of Hadoop MapReduce. 
