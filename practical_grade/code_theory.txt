@@ -1,0 +1,4197 @@
+# Complete Deep Explanation of Hadoop GradeMapper Code
+
+Now you are learning another very important Hadoop Mapper program:
+
+# GradeMapper
+
+This mapper is different from WordCount.
+
+Earlier:
+
+* mapper generated `(word,1)`
+
+Now:
+
+* mapper processes student records
+* extracts student ID and marks
+* emits structured academic data
+
+This is closer to:
+
+# real-world data processing
+
+because actual Hadoop jobs often process:
+
+* CSV files
+* database exports
+* structured records
+* logs
+* transactional data
+
+Now we will deeply understand:
+
+* every line
+* every word
+* every symbol
+* CSV parsing
+* mapper lifecycle
+* Hadoop internals
+* serialization
+* object creation
+* record processing
+* key-value generation
+* parsing mechanisms
+* distributed execution
+* internal memory behavior
+* execution flow
+
+VERY deeply from absolute beginning to advanced level.
+
+---
+
+# COMPLETE CODE
+
+```java id="kw7g94"
+import java.io.IOException;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reporter;
+
+public class GradeMapper extends MapReduceBase
+implements Mapper<LongWritable, Text, Text, IntWritable> {
+
+    public void map(LongWritable key,
+                    Text value,
+                    OutputCollector<Text, IntWritable> output,
+                    Reporter rep)
+                    throws IOException {
+
+        String line = value.toString();
+
+        String[] fields = line.split(",");
+
+        String studentId = fields[0];
+        int marks = Integer.parseInt(fields[1]);
+
+        output.collect(new Text(studentId),
+                       new IntWritable(marks));
+    }
+}
+```
+
+---
+
+# STEP 1 — What is This Program?
+
+This is:
+
+# Hadoop Mapper for Student Marks Processing
+
+Purpose:
+
+* read student records
+* separate fields
+* extract student ID
+* extract marks
+* emit key-value pairs
+
+---
+
+# Example Input
+
+```text id="gvr2w2"
+101,85
+102,90
+103,78
+```
+
+---
+
+# Mapper Output
+
+```text id="2ttjlwm"
+(101,85)
+(102,90)
+(103,78)
+```
+
+---
+
+# Why This Program Important?
+
+This demonstrates:
+
+# structured data processing
+
+instead of simple word splitting.
+
+---
+
+# STEP 2 — Imports
+
+---
+
+# Import 1
+
+```java id="jlwm8v"
+import java.io.IOException;
+```
+
+---
+
+# Why Needed?
+
+MapReduce interacts with:
+
+* HDFS
+* network
+* distributed nodes
+
+IO operations may fail.
+
+---
+
+# Import 2
+
+```java id="xjlwm9"
+import org.apache.hadoop.io.IntWritable;
+```
+
+---
+
+# What is IntWritable?
+
+Hadoop version of:
+
+```java id="yjlwm1"
+int
+```
+
+---
+
+# Why Hadoop Uses IntWritable?
+
+Because Hadoop requires:
+
+# serialization
+
+for:
+
+* network transfer
+* distributed storage
+* shuffle phase
+
+---
+
+# Serialization
+
+Converting object into:
+
+```text id="3jlwm6"
+byte stream
+```
+
+for transfer/storage.
+
+---
+
+# Example
+
+```java id="5jlwm3"
+IntWritable(85)
+```
+
+serialized into binary format.
+
+---
+
+# Import 3
+
+```java id="4jlwm6"
+import org.apache.hadoop.io.LongWritable;
+```
+
+---
+
+# LongWritable
+
+Hadoop version of:
+
+```java id="0jlwm2"
+long
+```
+
+---
+
+# Why long Needed?
+
+Represents:
+
+# byte offset of line in file
+
+---
+
+# Example
+
+Suppose file:
+
+```text id="9jlwm4"
+101,85
+102,90
+```
+
+Offsets may be:
+
+| Line   | Offset |
+| ------ | ------ |
+| 101,85 | 0      |
+| 102,90 | 7      |
+
+---
+
+# Import 4
+
+```java id="7jlwm5"
+import org.apache.hadoop.io.Text;
+```
+
+---
+
+# Text
+
+Hadoop version of:
+
+```java id="1jlwm5"
+String
+```
+
+Optimized for:
+
+* serialization
+* UTF handling
+* distributed processing
+
+---
+
+# Import 5
+
+```java id="2jlwm3"
+import org.apache.hadoop.mapred.MapReduceBase;
+```
+
+---
+
+# MapReduceBase
+
+Provides default implementations for mapper/reducer.
+
+Avoids writing unnecessary methods.
+
+---
+
+# Import 6
+
+```java id="6jlwm2"
+import org.apache.hadoop.mapred.Mapper;
+```
+
+---
+
+# Mapper Interface
+
+Defines:
+
+```java id="8jlwm0"
+map()
+```
+
+contract.
+
+---
+
+# Import 7
+
+```java id="9jlwm0"
+import org.apache.hadoop.mapred.OutputCollector;
+```
+
+---
+
+# OutputCollector
+
+Used to emit:
+
+# intermediate key-value pairs
+
+---
+
+# Import 8
+
+```java id="3jlwm1"
+import org.apache.hadoop.mapred.Reporter;
+```
+
+---
+
+# Reporter
+
+Used for:
+
+* progress updates
+* counters
+* monitoring
+
+---
+
+# STEP 3 — Class Declaration
+
+```java id="4jlwm4"
+public class GradeMapper
+```
+
+---
+
+# Meaning
+
+Mapper for:
+
+# student grade processing
+
+---
+
+# STEP 4 — extends MapReduceBase
+
+```java id="5jlwm7"
+extends MapReduceBase
+```
+
+Provides helper/default functionality.
+
+---
+
+# STEP 5 — implements Mapper
+
+```java id="6jlwm5"
+implements Mapper<LongWritable, Text, Text, IntWritable>
+```
+
+VERY IMPORTANT.
+
+---
+
+# Generic Structure
+
+```java id="7jlwm8"
+Mapper<InputKey,
+       InputValue,
+       OutputKey,
+       OutputValue>
+```
+
+---
+
+# Actual Meaning
+
+| Type         | Meaning           |
+| ------------ | ----------------- |
+| LongWritable | Input line offset |
+| Text         | Input line        |
+| Text         | Output student ID |
+| IntWritable  | Output marks      |
+
+---
+
+# Mapper Input Example
+
+```text id="8jlwm3"
+0 → "101,85"
+```
+
+---
+
+# Mapper Output Example
+
+```text id="9jlwm6"
+(101,85)
+```
+
+---
+
+# STEP 6 — map Method
+
+```java id="0jlwm3"
+public void map(
+```
+
+---
+
+# VERY IMPORTANT
+
+Hadoop automatically calls:
+
+```java id="1jlwm2"
+map()
+```
+
+for each input record.
+
+You NEVER manually call it.
+
+---
+
+# STEP 7 — Parameter 1
+
+```java id="2jlwm1"
+LongWritable key
+```
+
+---
+
+# Meaning
+
+Byte position of line in file.
+
+---
+
+# Example
+
+```text id="3jlwm0"
+0
+7
+14
+```
+
+---
+
+# STEP 8 — Parameter 2
+
+```java id="4jlwm2"
+Text value
+```
+
+Actual line content.
+
+Example:
+
+```text id="5jlwm1"
+101,85
+```
+
+---
+
+# STEP 9 — Parameter 3
+
+```java id="6jlwm0"
+OutputCollector<Text, IntWritable> output
+```
+
+Used to emit:
+
+# mapper output
+
+---
+
+# STEP 10 — Parameter 4
+
+```java id="7jlwm0"
+Reporter rep
+```
+
+Used for:
+
+* reporting progress
+* avoiding timeout
+* monitoring
+
+---
+
+# STEP 11 — throws IOException
+
+```java id="8jlwm1"
+throws IOException
+```
+
+Network/HDFS operations may fail.
+
+---
+
+# STEP 12 — Convert Text to String
+
+```java id="9jlwm3"
+String line = value.toString();
+```
+
+---
+
+# Why Needed?
+
+`value` is Hadoop Text object.
+
+Need normal Java String operations.
+
+---
+
+# Example
+
+Before:
+
+```java id="0jlwm4"
+Text("101,85")
+```
+
+After:
+
+```java id="1jlwm3"
+"101,85"
+```
+
+---
+
+# STEP 13 — Split Line
+
+```java id="2jlwm5"
+String[] fields = line.split(",");
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is CSV?
+
+CSV means:
+
+# Comma Separated Values
+
+---
+
+# Example
+
+```text id="3jlwm3"
+101,85
+```
+
+contains:
+
+* student ID
+* marks
+
+separated by comma.
+
+---
+
+# split(",")
+
+Breaks string into pieces using:
+
+```text id="4jlwm7"
+,
+```
+
+separator.
+
+---
+
+# Internal Result
+
+```text id="5jlwm4"
+fields[0] = 101
+fields[1] = 85
+```
+
+---
+
+# String[]
+
+VERY IMPORTANT.
+
+---
+
+# What is String[]?
+
+Array of strings.
+
+---
+
+# Array Concept
+
+Stores multiple values:
+
+```text id="6jlwm1"
+in indexed positions
+```
+
+---
+
+# Example
+
+```text id="7jlwm9"
+Index 0 → 101
+Index 1 → 85
+```
+
+---
+
+# Memory Representation
+
+```text id="8jlwm8"
+fields
+  ↓
+----------------
+|101|85|
+----------------
+ 0    1
+```
+
+---
+
+# STEP 14 — Extract Student ID
+
+```java id="9jlwm2"
+String studentId = fields[0];
+```
+
+---
+
+# fields[0]
+
+First field.
+
+---
+
+# Example
+
+For:
+
+```text id="0jlwm6"
+101,85
+```
+
+studentId becomes:
+
+```text id="1jlwm1"
+101
+```
+
+---
+
+# STEP 15 — Extract Marks
+
+```java id="2jlwm8"
+int marks = Integer.parseInt(fields[1]);
+```
+
+VERY IMPORTANT.
+
+---
+
+# fields[1]
+
+Second field.
+
+Example:
+
+```text id="3jlwm8"
+85
+```
+
+---
+
+# Problem
+
+Currently:
+
+```text id="4jlwm9"
+"85"
+```
+
+is:
+
+# String
+
+But marks should be numeric.
+
+---
+
+# Integer.parseInt()
+
+Converts:
+
+```text id="5jlwm2"
+"85"
+```
+
+into:
+
+```text id="6jlwm6"
+85
+```
+
+(integer)
+
+---
+
+# Internal Working
+
+```text id="7jlwm2"
+Character digits
+    ↓
+Parsing logic
+    ↓
+Binary integer
+```
+
+---
+
+# STEP 16 — output.collect()
+
+```java id="8jlwm6"
+output.collect(
+    new Text(studentId),
+    new IntWritable(marks)
+);
+```
+
+MOST IMPORTANT LINE.
+
+---
+
+# Purpose
+
+Emit:
+
+# intermediate key-value pair
+
+---
+
+# Example
+
+Input:
+
+```text id="9jlwm8"
+101,85
+```
+
+Output:
+
+```text id="0jlwm0"
+(101,85)
+```
+
+---
+
+# new Text(studentId)
+
+Converts Java String into Hadoop Text object.
+
+---
+
+# new IntWritable(marks)
+
+Converts Java int into Hadoop writable integer.
+
+---
+
+# Why Writable Again?
+
+Because mapper output may:
+
+* move across network
+* store on disk
+* shuffle between nodes
+
+Serialization required.
+
+---
+
+# COMPLETE EXECUTION FLOW
+
+Now understand EXACTLY what Hadoop does internally.
+
+---
+
+# INPUT FILE
+
+```text id="1jlwm4"
+101,85
+102,90
+103,78
+```
+
+---
+
+# STEP 1 — HDFS Split
+
+File divided into blocks.
+
+---
+
+# STEP 2 — RecordReader
+
+Creates:
+
+```text id="2jlwm6"
+(key,value)
+```
+
+pairs.
+
+---
+
+# Example
+
+```text id="3jlwm5"
+0 → "101,85"
+7 → "102,90"
+```
+
+---
+
+# STEP 3 — Hadoop Calls Mapper
+
+Internally:
+
+```java id="4jlwm1"
+map(0,"101,85")
+```
+
+---
+
+# STEP 4 — Convert to String
+
+```java id="5jlwm9"
+line = "101,85"
+```
+
+---
+
+# STEP 5 — split(",")
+
+Produces:
+
+```text id="6’wini3"
+["101","85"]
+```
+
+---
+
+# STEP 6 — Extract Fields
+
+```text id="7waswo9"
+studentId = "101"
+marks = 85
+```
+
+---
+
+# STEP 7 — Emit Output
+
+```text id="8waswo5"
+(101,85)
+```
+
+---
+
+# NEXT RECORD
+
+```java id="9waswo7"
+map(7,"102,90")
+```
+
+Output:
+
+```text id="0waswo4"
+(102,90)
+```
+
+---
+
+# FINAL MAPPER OUTPUT
+
+```text id="1waswo2"
+(101,85)
+(102,90)
+(103,78)
+```
+
+---
+
+# WHAT HAPPENS NEXT?
+
+Shuffle phase groups identical student IDs.
+
+---
+
+# Example
+
+If input had:
+
+```text id="2waswo8"
+101,85
+101,90
+```
+
+Shuffle produces:
+
+```text id="3waswo6"
+(101,[85,90])
+```
+
+Reducer can:
+
+* calculate total
+* average
+* highest marks
+
+---
+
+# INTERNAL MEMORY FLOW
+
+```text id="4waswo1"
+Input Split
+    ↓
+RecordReader
+    ↓
+key,value
+    ↓
+map()
+    ↓
+Intermediate Buffer
+    ↓
+Spill to Disk
+    ↓
+Shuffle
+```
+
+---
+
+# IMPORTANT CONCEPTS USED
+
+| Concept                | Used Where       |
+| ---------------------- | ---------------- |
+| CSV Parsing            | split(",")       |
+| Serialization          | Writable classes |
+| Distributed Processing | Mapper execution |
+| Tokenization           | field splitting  |
+| Key-Value Processing   | collect()        |
+| Data Transformation    | parseInt()       |
+| Parallelism            | Multiple mappers |
+| HDFS Processing        | Input splits     |
+
+---
+
+# REAL-WORLD APPLICATIONS
+
+This same pattern is used for:
+
+| Domain     | Example              |
+| ---------- | -------------------- |
+| Banking    | account,balance      |
+| Healthcare | patientId,diagnosis  |
+| E-commerce | product,price        |
+| IoT        | sensorId,temperature |
+| Education  | studentId,marks      |
+
+---
+
+# FINAL UNDERSTANDING
+
+This GradeMapper demonstrates:
+
+* structured CSV data processing
+* Hadoop serialization
+* distributed record parsing
+* key-value transformation
+* scalable data extraction
+* parallel processing
+* MapReduce architecture
+* intermediate data generation
+
+This is much closer to real-world Big Data analytics systems than simple WordCount examples.
+-----------------------------------------------------------------------------------------------
+# Complete Deep Explanation of Hadoop GradeReducer Code
+
+Now you are learning a very important real-world Hadoop reducer program:
+
+# GradeReducer
+
+This reducer:
+
+* receives student marks
+* calculates total marks
+* assigns grades
+* emits final result
+
+This is more advanced than WordCount because now reducer performs:
+
+* aggregation
+* conditional logic
+* decision making
+* classification
+
+This resembles real-world analytics systems used in:
+
+* universities
+* result processing
+* grading systems
+* business analytics
+* scoring systems
+
+Now we will deeply understand:
+
+* every line
+* every word
+* every symbol
+* reducer internals
+* iterator mechanism
+* grading logic
+* shuffle interaction
+* Hadoop serialization
+* conditional execution
+* memory behavior
+* object creation
+* distributed processing
+* complete execution lifecycle
+
+VERY deeply from beginner to advanced level.
+
+---
+
+# COMPLETE CODE
+
+```java id="i1n0j4"
+import java.io.IOException;
+import java.util.Iterator;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.Reporter;
+
+public class GradeReducer extends MapReduceBase
+implements Reducer<Text, IntWritable, Text, Text> {
+
+    public void reduce(Text key,
+                       Iterator<IntWritable> values,
+                       OutputCollector<Text, Text> output,
+                       Reporter rep)
+                       throws IOException {
+
+        int totalMarks = 0;
+
+        while(values.hasNext()) {
+            totalMarks += values.next().get();
+        }
+
+        String grade;
+
+        if(totalMarks >= 90)
+            grade = "A";
+        else if(totalMarks >= 80)
+            grade = "B";
+        else if(totalMarks >= 70)
+            grade = "C";
+        else if(totalMarks >= 60)
+            grade = "D";
+        else
+            grade = "F";
+
+        output.collect(key, new Text(grade));
+    }
+}
+```
+
+---
+
+# STEP 1 — What is This Reducer Doing?
+
+Purpose:
+
+* Receive grouped student marks
+* Calculate total marks
+* Decide grade
+* Emit final student grade
+
+---
+
+# Example Input to Reducer
+
+```text id="1vv8l9"
+(101,[85])
+(102,[92])
+(103,[74])
+```
+
+---
+
+# Reducer Output
+
+```text id="ewq8pq"
+(101,B)
+(102,A)
+(103,C)
+```
+
+---
+
+# IMPORTANT CONCEPT
+
+Reducer performs:
+
+# aggregation + classification
+
+---
+
+# STEP 2 — Import IOException
+
+```java id="9yqj9o"
+import java.io.IOException;
+```
+
+---
+
+# Why Needed?
+
+Reducer may:
+
+* write output
+* communicate with HDFS
+* transfer network data
+
+These operations may fail.
+
+---
+
+# STEP 3 — Import Iterator
+
+```java id="lqlsz8"
+import java.util.Iterator;
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is Iterator?
+
+Iterator is a Java object used to:
+
+# traverse values one-by-one
+
+---
+
+# Why Hadoop Uses Iterator?
+
+Suppose:
+
+```text id="bsv8qg"
+student 101
+```
+
+has:
+
+```text id="4wq2rz"
+millions of marks
+```
+
+Hadoop cannot load everything into RAM.
+
+Iterator allows:
+
+# streaming processing
+
+---
+
+# Example
+
+```text id="2vfjlwm"
+[85,90,70]
+```
+
+Iterator accesses:
+
+```text id="jlwm3n"
+85 → 90 → 70
+```
+
+one at a time.
+
+---
+
+# STEP 4 — Import IntWritable
+
+```java id="jlwm9x"
+import org.apache.hadoop.io.IntWritable;
+```
+
+---
+
+# IntWritable
+
+Hadoop version of:
+
+```java id="xjlwm1"
+int
+```
+
+Optimized for:
+
+* serialization
+* network transfer
+* distributed systems
+
+---
+
+# STEP 5 — Import Text
+
+```java id="7jlwmx"
+import org.apache.hadoop.io.Text;
+```
+
+---
+
+# Text
+
+Hadoop version of:
+
+```java id="8jlwm4"
+String
+```
+
+---
+
+# Why Hadoop Uses Text?
+
+Because Hadoop needs:
+
+* efficient serialization
+* UTF support
+* distributed compatibility
+
+---
+
+# STEP 6 — Import MapReduceBase
+
+```java id="0jlwm9"
+import org.apache.hadoop.mapred.MapReduceBase;
+```
+
+Provides default reducer functionality.
+
+---
+
+# STEP 7 — Import OutputCollector
+
+```java id="1jlwm8"
+import org.apache.hadoop.mapred.OutputCollector;
+```
+
+Used to emit:
+
+# final reducer output
+
+---
+
+# STEP 8 — Import Reducer
+
+```java id="2jlwm0"
+import org.apache.hadoop.mapred.Reducer;
+```
+
+Reducer interface requiring:
+
+```java id="3jlwm2"
+reduce()
+```
+
+implementation.
+
+---
+
+# STEP 9 — Import Reporter
+
+```java id="4jlwm0"
+import org.apache.hadoop.mapred.Reporter;
+```
+
+Used for:
+
+* progress reporting
+* monitoring
+* counters
+
+---
+
+# STEP 10 — Class Declaration
+
+```java id="5jlwm5"
+public class GradeReducer
+```
+
+Reducer for:
+
+# grade processing
+
+---
+
+# STEP 11 — extends MapReduceBase
+
+```java id="6jlwm7"
+extends MapReduceBase
+```
+
+Provides helper/default implementations.
+
+---
+
+# STEP 12 — implements Reducer
+
+```java id="7jlwm6"
+implements Reducer<Text, IntWritable, Text, Text>
+```
+
+VERY IMPORTANT.
+
+---
+
+# Structure
+
+```java id="8jlwm7"
+Reducer<InputKey,
+        InputValue,
+        OutputKey,
+        OutputValue>
+```
+
+---
+
+# Actual Meaning
+
+| Type        | Meaning    |
+| ----------- | ---------- |
+| Text        | Student ID |
+| IntWritable | Marks      |
+| Text        | Student ID |
+| Text        | Grade      |
+
+---
+
+# Reducer Input Example
+
+```text id="9jlwm9"
+(101,[85])
+```
+
+---
+
+# Reducer Output Example
+
+```text id="0jlwm5"
+(101,B)
+```
+
+---
+
+# STEP 13 — reduce Method
+
+```java id="1jlwm6"
+public void reduce(
+```
+
+VERY IMPORTANT.
+
+---
+
+# Hadoop Automatically Calls reduce()
+
+You NEVER manually call it.
+
+Framework invokes it after:
+
+* shuffle
+* sort
+* grouping
+
+---
+
+# STEP 14 — Parameter 1
+
+```java id="2jlwm4"
+Text key
+```
+
+Represents:
+
+# student ID
+
+Example:
+
+```text id="3’wini1"
+101
+```
+
+---
+
+# STEP 15 — Parameter 2
+
+```java id="4’wini7"
+Iterator<IntWritable> values
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is values?
+
+All marks belonging to same student.
+
+---
+
+# Example
+
+Mapper output:
+
+```text id="5’wini9"
+(101,85)
+(101,90)
+```
+
+After shuffle:
+
+```text id="6’wini4"
+(101,[85,90])
+```
+
+---
+
+# Iterator Traverses Values
+
+One-by-one.
+
+---
+
+# STEP 16 — Parameter 3
+
+```java id="7’wini2"
+OutputCollector<Text, Text> output
+```
+
+Used to emit:
+
+# final grade output
+
+---
+
+# Example
+
+```text id="8’wini8"
+(101,A)
+```
+
+---
+
+# STEP 17 — Parameter 4
+
+```java id="9’wini5"
+Reporter rep
+```
+
+Used for:
+
+* monitoring
+* counters
+* progress updates
+
+---
+
+# STEP 18 — throws IOException
+
+```java id="0’wini0"
+throws IOException
+```
+
+Reducer may encounter:
+
+* filesystem errors
+* network failures
+
+---
+
+# STEP 19 — Initialize Total
+
+```java id="1’wini6"
+int totalMarks = 0;
+```
+
+Stores accumulated marks.
+
+---
+
+# Example
+
+Eventually becomes:
+
+```text id="2’wini3"
+85
+90
+175
+```
+
+depending on records.
+
+---
+
+# STEP 20 — while Loop
+
+```java id="3’wini7"
+while(values.hasNext())
+```
+
+VERY IMPORTANT.
+
+---
+
+# hasNext()
+
+Checks:
+
+```text id="4’wini1"
+"Is another mark available?"
+```
+
+Returns:
+
+* true
+* false
+
+---
+
+# STEP 21 — values.next()
+
+```java id="5’wini8"
+values.next()
+```
+
+Retrieves next IntWritable object.
+
+---
+
+# Example
+
+Iterator:
+
+```text id="6’wini5"
+[85,90]
+```
+
+Returns:
+
+```text id="7’wini9"
+85
+then
+90
+```
+
+---
+
+# STEP 22 — .get()
+
+```java id="8’wini6"
+.get()
+```
+
+VERY IMPORTANT.
+
+---
+
+# Why Needed?
+
+`values.next()` returns:
+
+```java id="9’wini2"
+IntWritable
+```
+
+Need primitive integer.
+
+---
+
+# Example
+
+Before:
+
+```java id="0ვნის4"
+IntWritable(85)
+```
+
+After:
+
+```text id="1ვნის8"
+85
+```
+
+---
+
+# STEP 23 — totalMarks +=
+
+```java id="2ვნის5"
+totalMarks += values.next().get();
+```
+
+Equivalent to:
+
+```java id="3ვნის1"
+totalMarks = totalMarks + value;
+```
+
+---
+
+# Example Execution
+
+Initial:
+
+```text id="4ვნის7"
+0
+```
+
+After first mark:
+
+```text id="5ვნის9"
+85
+```
+
+After second mark:
+
+```text id="6ვნის2"
+175
+```
+
+---
+
+# STEP 24 — Declare Grade Variable
+
+```java id="7ვნის6"
+String grade;
+```
+
+Stores final grade.
+
+---
+
+# Why Separate Variable?
+
+Because:
+
+* grade assigned later
+* depends on conditions
+
+---
+
+# STEP 25 — if Condition
+
+```java id="8ვნის3"
+if(totalMarks >= 90)
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is if?
+
+Conditional statement.
+
+Executes block only if condition true.
+
+---
+
+# >= Operator
+
+Means:
+
+# greater than or equal
+
+---
+
+# Example
+
+```text id="9ვნის0"
+95 >= 90 → true
+85 >= 90 → false
+```
+
+---
+
+# STEP 26 — Assign Grade A
+
+```java id="0ვნის6"
+grade = "A";
+```
+
+If marks ≥ 90.
+
+---
+
+# STEP 27 — else if
+
+```java id="1ვნის2"
+else if(totalMarks >= 80)
+```
+
+Runs only if previous condition false.
+
+---
+
+# Grade Logic
+
+| Marks | Grade |
+| ----- | ----- |
+| ≥ 90  | A     |
+| ≥ 80  | B     |
+| ≥ 70  | C     |
+| ≥ 60  | D     |
+| < 60  | F     |
+
+---
+
+# Decision Flow Internally
+
+```text id="2ვნის9"
+marks = 85
+   ↓
+>=90 ? NO
+   ↓
+>=80 ? YES
+   ↓
+grade = B
+```
+
+---
+
+# STEP 28 — else Block
+
+```java id="3ვნის5"
+else
+    grade = "F";
+```
+
+Default case.
+
+---
+
+# Meaning
+
+If student fails all conditions:
+
+```text id="4ვნის0"
+grade = F
+```
+
+---
+
+# STEP 29 — output.collect()
+
+```java id="5ვნის7"
+output.collect(key, new Text(grade));
+```
+
+MOST IMPORTANT REDUCER LINE.
+
+---
+
+# Purpose
+
+Emit:
+
+# final result
+
+---
+
+# Example
+
+```text id="6ვნის1"
+(101,B)
+```
+
+---
+
+# key
+
+Student ID.
+
+---
+
+# new Text(grade)
+
+Converts Java String into Hadoop Text object.
+
+---
+
+# Why Text Again?
+
+Reducer output may:
+
+* move across network
+* store in HDFS
+* serialize to disk
+
+---
+
+# COMPLETE INTERNAL EXECUTION FLOW
+
+Now understand EXACTLY what Hadoop does internally.
+
+---
+
+# INPUT FILE
+
+```text id="7ვნის8"
+101,85
+102,92
+103,74
+```
+
+---
+
+# STEP 1 — Mapper Output
+
+```text id="8ვნის4"
+(101,85)
+(102,92)
+(103,74)
+```
+
+---
+
+# STEP 2 — Shuffle Phase
+
+Groups same student IDs.
+
+Example:
+
+```text id="9ვნის7"
+(101,[85])
+```
+
+---
+
+# STEP 3 — Hadoop Calls Reducer
+
+Internally:
+
+```java id="0ვნის3"
+reduce("101",[85])
+```
+
+---
+
+# STEP 4 — Loop Executes
+
+```text id="1ვნის0"
+totalMarks = 85
+```
+
+---
+
+# STEP 5 — Grade Decision
+
+```text id="2ვნის6"
+85 >= 80
+```
+
+Grade:
+
+```text id="3ვნის2"
+B
+```
+
+---
+
+# STEP 6 — Emit Output
+
+```text id="4ვნის9"
+(101,B)
+```
+
+---
+
+# FINAL OUTPUT
+
+```text id="5ვნის4"
+101 B
+102 A
+103 C
+```
+
+---
+
+# INTERNAL REDUCER MEMORY FLOW
+
+```text id="6ვნის0"
+Shuffle Output
+      ↓
+Grouped Values
+      ↓
+Iterator Stream
+      ↓
+reduce()
+      ↓
+Grade Calculation
+      ↓
+Output Buffer
+      ↓
+HDFS Output File
+```
+
+---
+
+# REAL-WORLD APPLICATIONS
+
+Same pattern used in:
+
+| Domain       | Example                   |
+| ------------ | ------------------------- |
+| Education    | grade calculation         |
+| Banking      | credit scoring            |
+| Healthcare   | risk classification       |
+| E-commerce   | customer ranking          |
+| Insurance    | premium category          |
+| AI Analytics | prediction classification |
+
+---
+
+# IMPORTANT HADOOP CONCEPTS USED
+
+| Concept                 | Used Where       |
+| ----------------------- | ---------------- |
+| Aggregation             | totalMarks       |
+| Streaming               | Iterator         |
+| Classification          | if-else grading  |
+| Serialization           | Text/IntWritable |
+| Distributed Processing  | Hadoop reducer   |
+| Shuffle & Sort          | grouped values   |
+| Conditional Logic       | grading rules    |
+| Final Output Generation | collect()        |
+
+---
+
+# FINAL UNDERSTANDING
+
+This GradeReducer demonstrates:
+
+* distributed aggregation
+* iterator-based streaming
+* classification logic
+* Hadoop serialization
+* scalable data analytics
+* conditional computation
+* MapReduce reduction phase
+* real-world business logic execution
+
+This is much closer to actual enterprise Hadoop analytics systems than basic WordCount examples.
+----------------------------------------------------------------------------------------------------------
+# Complete Deep Explanation of Hadoop GradeDriver Code
+
+Now you are learning the:
+
+# Driver Program of the Grade Processing Hadoop Application
+
+This is the:
+
+# controller + coordinator + launcher
+
+of the entire Grade MapReduce system.
+
+Without this Driver:
+
+* GradeMapper cannot run
+* GradeReducer cannot run
+* Hadoop job cannot start
+* cluster execution cannot happen
+
+The Driver controls:
+
+* job configuration
+* mapper registration
+* reducer registration
+* input/output paths
+* job submission
+* distributed execution
+
+This is the MOST IMPORTANT coordinating file.
+
+Now we will deeply understand:
+
+* every word
+* every line
+* every class
+* Hadoop internals
+* job lifecycle
+* cluster execution
+* YARN interaction
+* HDFS communication
+* configuration system
+* mapper/reducer orchestration
+* distributed task scheduling
+* complete execution flow
+
+VERY deeply from beginner to advanced level.
+
+---
+
+# COMPLETE CODE
+
+```java id="90kux0"
+import java.io.IOException;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+public class GradeDriver extends Configured implements Tool {
+
+    public int run(String args[]) throws IOException {
+
+        if(args.length < 2) {
+            System.out.println("Please give valid input/output paths");
+            return -1;
+        }
+
+        JobConf conf = new JobConf(GradeDriver.class);
+
+        FileInputFormat.setInputPaths(conf, new Path(args[0]));
+        FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+
+        conf.setMapperClass(GradeMapper.class);
+        conf.setReducerClass(GradeReducer.class);
+
+        conf.setMapOutputKeyClass(Text.class);
+        conf.setMapOutputValueClass(IntWritable.class);
+
+        conf.setOutputKeyClass(Text.class);
+        conf.setOutputValueClass(Text.class);
+
+        JobClient.runJob(conf);
+
+        return 0;
+    }
+
+    public static void main(String args[]) throws Exception {
+        ToolRunner.run(new GradeDriver(), args);
+    }
+}
+```
+
+---
+
+# STEP 1 — What is Driver Program?
+
+The Driver Program:
+
+# manages the complete Hadoop job
+
+---
+
+# Responsibilities of Driver
+
+| Responsibility   | Purpose                       |
+| ---------------- | ----------------------------- |
+| Configure job    | Setup MapReduce               |
+| Register Mapper  | Tell Hadoop mapper class      |
+| Register Reducer | Tell Hadoop reducer class     |
+| Input Path       | Tell Hadoop where data exists |
+| Output Path      | Tell Hadoop where output goes |
+| Submit Job       | Start distributed execution   |
+| Monitor Job      | Coordinate processing         |
+
+---
+
+# Real-Life Analogy
+
+Suppose:
+
+* Mapper = workers
+* Reducer = evaluators
+
+Then:
+
+# Driver = manager
+
+Manager:
+
+* gives instructions
+* assigns work
+* starts execution
+* coordinates whole system
+
+---
+
+# STEP 2 — Import IOException
+
+```java id="ewhhgx"
+import java.io.IOException;
+```
+
+---
+
+# Why Needed?
+
+Hadoop may encounter:
+
+* HDFS failures
+* network problems
+* file access errors
+
+So Driver handles:
+
+```java id="h9md7l"
+IOException
+```
+
+---
+
+# STEP 3 — Import Configured
+
+```java id="xq3v1n"
+import org.apache.hadoop.conf.Configured;
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is Configuration?
+
+Configuration means:
+
+# Hadoop settings
+
+Examples:
+
+* mapper class
+* reducer class
+* memory allocation
+* filesystem settings
+
+---
+
+# What is Configured Class?
+
+Provides built-in support for:
+
+# Hadoop configuration management
+
+---
+
+# Why Extend Configured?
+
+Allows:
+
+* easy access to configuration
+* cluster settings management
+* property handling
+
+---
+
+# STEP 4 — Import Path
+
+```java id="lxy4d9"
+import org.apache.hadoop.fs.Path;
+```
+
+---
+
+# What is Path?
+
+Represents:
+
+# Hadoop filesystem path
+
+---
+
+# Example
+
+```java id="vmd0mt"
+new Path("/input")
+```
+
+---
+
+# Why Hadoop Uses Path Instead of String?
+
+Because Hadoop supports:
+
+* HDFS
+* local filesystem
+* cloud storage
+* distributed storage systems
+
+Path abstracts filesystem operations.
+
+---
+
+# STEP 5 — Import IntWritable
+
+```java id="zbgjmw"
+import org.apache.hadoop.io.IntWritable;
+```
+
+---
+
+# IntWritable
+
+Hadoop version of:
+
+```java id="4jcbkw"
+int
+```
+
+Optimized for:
+
+* serialization
+* network transfer
+* distributed processing
+
+---
+
+# STEP 6 — Import Text
+
+```java id="d8rw5n"
+import org.apache.hadoop.io.Text;
+```
+
+---
+
+# Text
+
+Hadoop version of:
+
+```java id="1b3f4m"
+String
+```
+
+---
+
+# Why Writable Classes Used?
+
+Because Hadoop transfers data:
+
+* between nodes
+* over network
+* during shuffle phase
+
+Serialization required.
+
+---
+
+# STEP 7 — FileInputFormat Import
+
+```java id="pqowmj"
+import org.apache.hadoop.mapred.FileInputFormat;
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is FileInputFormat?
+
+Handles:
+
+# reading input data
+
+---
+
+# Responsibilities
+
+* locating files
+* creating input splits
+* preparing mapper input
+
+---
+
+# STEP 8 — FileOutputFormat Import
+
+```java id="phljd3"
+import org.apache.hadoop.mapred.FileOutputFormat;
+```
+
+Handles:
+
+# reducer output writing
+
+---
+
+# Responsibilities
+
+* creating output directory
+* writing reducer results
+* generating part files
+
+---
+
+# STEP 9 — JobClient Import
+
+```java id="grm8j1"
+import org.apache.hadoop.mapred.JobClient;
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is JobClient?
+
+Used to:
+
+# submit Hadoop jobs to cluster
+
+---
+
+# JobClient Responsibilities
+
+* communicate with ResourceManager
+* send job configuration
+* monitor execution
+
+---
+
+# STEP 10 — JobConf Import
+
+```java id="h2sl2w"
+import org.apache.hadoop.mapred.JobConf;
+```
+
+MOST IMPORTANT CLASS.
+
+---
+
+# What is JobConf?
+
+# Job Configuration Object
+
+Stores ALL job information.
+
+---
+
+# Contains
+
+* mapper class
+* reducer class
+* input paths
+* output paths
+* data types
+* cluster settings
+
+---
+
+# Internally
+
+Hadoop creates:
+
+# execution plan
+
+from JobConf.
+
+---
+
+# STEP 11 — Tool Import
+
+```java id="2gfpx8"
+import org.apache.hadoop.util.Tool;
+```
+
+---
+
+# Tool Interface
+
+Standard Hadoop interface for:
+
+* running jobs
+* handling configurations
+
+---
+
+# Requires
+
+```java id="9j7jlwm"
+run()
+```
+
+method implementation.
+
+---
+
+# STEP 12 — ToolRunner Import
+
+```java id="3jjlwm0"
+import org.apache.hadoop.util.ToolRunner;
+```
+
+---
+
+# What is ToolRunner?
+
+Utility class that:
+
+* launches Hadoop applications
+* manages configuration
+* parses arguments
+
+---
+
+# STEP 13 — Class Declaration
+
+```java id="4jjlwm1"
+public class GradeDriver
+```
+
+Driver for:
+
+# grade processing application
+
+---
+
+# STEP 14 — extends Configured
+
+```java id="5jjlwm2"
+extends Configured
+```
+
+Enables Hadoop configuration support.
+
+---
+
+# STEP 15 — implements Tool
+
+```java id="6jjlwm3"
+implements Tool
+```
+
+VERY IMPORTANT.
+
+---
+
+# Why Tool Interface?
+
+Provides:
+
+* cleaner job execution
+* standardized Hadoop workflow
+
+---
+
+# STEP 16 — run Method
+
+```java id="7jjlwm4"
+public int run(String args[])
+```
+
+VERY IMPORTANT.
+
+---
+
+# args[]
+
+Stores command-line arguments.
+
+---
+
+# Example Command
+
+```bash id="8jjlwm5"
+hadoop jar grade.jar GradeDriver /input /output
+```
+
+---
+
+# Values
+
+| Argument | Meaning     |
+| -------- | ----------- |
+| args[0]  | input path  |
+| args[1]  | output path |
+
+---
+
+# STEP 17 — Input Validation
+
+```java id="9jjlwm6"
+if(args.length < 2)
+```
+
+VERY IMPORTANT.
+
+---
+
+# Why Needed?
+
+Program requires:
+
+1. input path
+2. output path
+
+---
+
+# Example Wrong Command
+
+```bash id="0j’wini1"
+hadoop jar grade.jar
+```
+
+No paths provided.
+
+---
+
+# args.length
+
+Represents:
+
+# number of arguments
+
+---
+
+# STEP 18 — Error Message
+
+```java id="1j’wini2"
+System.out.println(
+"Please give valid input/output paths"
+);
+```
+
+Displays error to user.
+
+---
+
+# STEP 19 — return -1
+
+```java id="2j’wini3"
+return -1;
+```
+
+Means:
+
+# execution failed
+
+---
+
+# Convention
+
+| Value | Meaning |
+| ----- | ------- |
+| 0     | success |
+| -1    | failure |
+
+---
+
+# STEP 20 — Create JobConf
+
+```java id="3j’wini4"
+JobConf conf = new JobConf(GradeDriver.class);
+```
+
+MOST IMPORTANT LINE.
+
+---
+
+# Purpose
+
+Creates:
+
+# Hadoop job configuration object
+
+---
+
+# Internal Role
+
+Stores:
+
+* mapper class
+* reducer class
+* IO paths
+* type info
+* execution settings
+
+---
+
+# Why GradeDriver.class?
+
+Tells Hadoop:
+
+```text id="4j’wini5"
+which class defines job configuration
+```
+
+---
+
+# STEP 21 — Set Input Path
+
+```java id="5j’wini6"
+FileInputFormat.setInputPaths(
+conf,
+new Path(args[0])
+);
+```
+
+VERY IMPORTANT.
+
+---
+
+# Purpose
+
+Tells Hadoop:
+
+# where input data exists
+
+---
+
+# Example
+
+```bash id="6j’wini7"
+/input
+```
+
+---
+
+# Internal Working
+
+Hadoop:
+
+1. contacts NameNode
+2. locates files
+3. creates input splits
+4. schedules mappers
+
+---
+
+# STEP 22 — Set Output Path
+
+```java id="7j’wini8"
+FileOutputFormat.setOutputPath(
+conf,
+new Path(args[1])
+);
+```
+
+---
+
+# Purpose
+
+Tells Hadoop:
+
+# where reducer output should be stored
+
+---
+
+# IMPORTANT RULE
+
+Output directory:
+
+# must NOT already exist
+
+Otherwise Hadoop throws error.
+
+---
+
+# STEP 23 — Set Mapper Class
+
+```java id="8j’wini9"
+conf.setMapperClass(GradeMapper.class);
+```
+
+VERY IMPORTANT.
+
+---
+
+# Purpose
+
+Registers:
+
+# GradeMapper
+
+with Hadoop framework.
+
+---
+
+# Internally
+
+Hadoop later creates:
+
+```java id="9j’wini0"
+new GradeMapper()
+```
+
+objects automatically.
+
+---
+
+# STEP 24 — Set Reducer Class
+
+```java id="0k’wini1"
+conf.setReducerClass(GradeReducer.class);
+```
+
+Registers:
+
+# GradeReducer
+
+---
+
+# Internally
+
+Hadoop creates:
+
+```java id="1k’wini2"
+new GradeReducer()
+```
+
+objects.
+
+---
+
+# STEP 25 — Set Map Output Key Type
+
+```java id="2k’wini3"
+conf.setMapOutputKeyClass(Text.class);
+```
+
+---
+
+# Mapper Output Key
+
+Student ID.
+
+Example:
+
+```text id="3k’wini4"
+101
+```
+
+---
+
+# STEP 26 — Set Map Output Value Type
+
+```java id="4k’wini5"
+conf.setMapOutputValueClass(
+IntWritable.class
+);
+```
+
+---
+
+# Mapper Output Value
+
+Marks.
+
+Example:
+
+```text id="5k’wini6"
+85
+```
+
+---
+
+# Why Hadoop Needs Types?
+
+For:
+
+* serialization
+* shuffle
+* sorting
+* memory allocation
+
+---
+
+# STEP 27 — Set Final Output Key Type
+
+```java id="6k’wini7"
+conf.setOutputKeyClass(Text.class);
+```
+
+Reducer output key:
+
+```text id="7k’wini8"
+student ID
+```
+
+---
+
+# STEP 28 — Set Final Output Value Type
+
+```java id="8k’wini9"
+conf.setOutputValueClass(Text.class);
+```
+
+Reducer output value:
+
+```text id="9k’wini0"
+grade
+```
+
+Example:
+
+```text id="0l’wini1"
+A
+B
+C
+```
+
+---
+
+# IMPORTANT DIFFERENCE
+
+Mapper output value:
+
+```java id="1l’wini2"
+IntWritable
+```
+
+Reducer output value:
+
+```java id="2l’wini3"
+Text
+```
+
+because reducer outputs grades.
+
+---
+
+# STEP 29 — Run Job
+
+```java id="3l’wini4"
+JobClient.runJob(conf);
+```
+
+MOST IMPORTANT EXECUTION LINE.
+
+---
+
+# What Happens Here?
+
+This line:
+
+# submits job to Hadoop cluster
+
+---
+
+# COMPLETE INTERNAL EXECUTION FLOW
+
+VERY IMPORTANT.
+
+---
+
+# STEP 1 — Job Submitted
+
+Driver sends JobConf.
+
+---
+
+# STEP 2 — ResourceManager/YARN
+
+Allocates:
+
+* memory
+* CPU
+* containers
+
+---
+
+# STEP 3 — Input Splits Created
+
+Input file divided into blocks.
+
+---
+
+# STEP 4 — Mapper Tasks Started
+
+GradeMapper processes records.
+
+---
+
+# Example Mapper Output
+
+```text id="4l’wini5"
+(101,85)
+(102,92)
+```
+
+---
+
+# STEP 5 — Shuffle Phase
+
+Groups same student IDs.
+
+---
+
+# Example
+
+```text id="5l’wini6"
+(101,[85,90])
+```
+
+---
+
+# STEP 6 — Sort Phase
+
+Keys sorted.
+
+---
+
+# STEP 7 — Reducer Tasks Started
+
+GradeReducer calculates grades.
+
+---
+
+# STEP 8 — Final Output Written
+
+Stored in HDFS.
+
+---
+
+# STEP 30 — return 0
+
+```java id="6l’wini7"
+return 0;
+```
+
+Means:
+
+# successful execution
+
+---
+
+# STEP 31 — main Method
+
+```java id="7l’wini8"
+public static void main(String args[])
+```
+
+Program entry point.
+
+---
+
+# JVM Starts Here
+
+Execution begins from:
+
+```java id="8l’wini9"
+main()
+```
+
+---
+
+# STEP 32 — ToolRunner.run()
+
+```java id="9l’wini0"
+ToolRunner.run(new GradeDriver(), args);
+```
+
+VERY IMPORTANT.
+
+---
+
+# What ToolRunner Does?
+
+Handles:
+
+* configuration setup
+* argument parsing
+* launching job
+
+---
+
+# Internal Flow
+
+```text id="0m’wini1"
+main()
+   ↓
+ToolRunner.run()
+   ↓
+run()
+   ↓
+Job Submission
+```
+
+---
+
+# COMPLETE END-TO-END FLOW
+
+```text id="1m’wini2"
+Input CSV
+    ↓
+HDFS Storage
+    ↓
+GradeDriver
+    ↓
+JobConf Setup
+    ↓
+Mapper Execution
+    ↓
+Shuffle & Sort
+    ↓
+Reducer Execution
+    ↓
+Grade Assignment
+    ↓
+Output to HDFS
+```
+
+---
+
+# REAL INTERNAL ARCHITECTURE
+
+```text id="2m’wini3"
+               GradeDriver
+                    |
+                JobConf
+                    |
+             JobClient.runJob()
+                    |
+        -------------------------
+        |                       |
+   ResourceManager          HDFS
+        |
+   Mapper Tasks
+        |
+  Shuffle & Sort
+        |
+   Reducer Tasks
+        |
+   Final Output
+```
+
+---
+
+# IMPORTANT CONCEPTS USED
+
+| Concept                     | Used Where                     |
+| --------------------------- | ------------------------------ |
+| Configuration               | JobConf                        |
+| Distributed Execution       | runJob()                       |
+| Serialization               | Writable classes               |
+| HDFS Integration            | Path                           |
+| Cluster Scheduling          | JobClient                      |
+| Parallel Processing         | Input splits                   |
+| Resource Management         | YARN                           |
+| Mapper/Reducer Coordination | setMapperClass/setReducerClass |
+
+---
+
+# FINAL UNDERSTANDING
+
+This GradeDriver demonstrates:
+
+* Hadoop job orchestration
+* distributed execution management
+* cluster communication
+* mapper/reducer coordination
+* HDFS interaction
+* scalable analytics execution
+* job lifecycle management
+* enterprise-level distributed processing
+
+It acts as the:
+
+# central controller of the complete Grade Processing Hadoop system.
+---------------------------------------------------------------------------
+# Complete Deep Explanation of Hadoop Commands
+
+Now you are learning the:
+
+# practical execution commands
+
+These commands:
+
+* compile Java Hadoop code
+* create JAR file
+* create input data
+* upload file to HDFS
+* run MapReduce job
+* read output from HDFS
+
+This is the complete practical workflow of a Hadoop MapReduce program.
+
+We will understand:
+
+* every word
+* every symbol
+* every command
+* shell behavior
+* HDFS interaction
+* JVM working
+* Hadoop runtime
+* classpath
+* JAR structure
+* distributed execution
+* complete internal process
+
+VERY deeply.
+
+---
+
+# COMPLETE FLOW
+
+```text id="ot6tsc"
+Java Code
+   ↓
+Compilation
+   ↓
+.class Files
+   ↓
+JAR Packaging
+   ↓
+Input Creation
+   ↓
+Upload to HDFS
+   ↓
+Run Hadoop Job
+   ↓
+MapReduce Execution
+   ↓
+Output Stored in HDFS
+   ↓
+View Output
+```
+
+---
+
+# COMMAND 1 — COMPILATION
+
+```bash id="9jlwmn"
+javac -classpath `hadoop classpath` -d . WCMapper.java WCReducer.java WCDriver.java
+```
+
+VERY IMPORTANT COMMAND.
+
+---
+
+# STEP 1 — What is javac?
+
+```bash id="yjlwmq"
+javac
+```
+
+means:
+
+# Java Compiler
+
+---
+
+# What Does Compiler Do?
+
+Converts:
+
+```text id="djlwmq"
+.java source code
+```
+
+into:
+
+```text id="fjlwmv"
+.class bytecode
+```
+
+---
+
+# Example
+
+Before:
+
+```text id="jlwmau"
+WCMapper.java
+```
+
+After:
+
+```text id="jlwm5f"
+WCMapper.class
+```
+
+---
+
+# Why Compilation Needed?
+
+JVM cannot directly understand:
+
+```java id="hjlwm2"
+.java
+```
+
+It understands:
+
+```text id="2jlwmv"
+bytecode
+```
+
+inside:
+
+```text id="yjlwm7"
+.class
+```
+
+files.
+
+---
+
+# STEP 2 — -classpath
+
+```bash id="hjlwmn"
+-classpath
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is Classpath?
+
+Classpath tells Java:
+
+# where required libraries/classes exist
+
+---
+
+# Why Hadoop Needs Classpath?
+
+Your code uses Hadoop classes:
+
+```java id="mjlwm9"
+Mapper
+Reducer
+Text
+IntWritable
+JobConf
+```
+
+These are NOT built into Java.
+
+They exist inside:
+
+# Hadoop JAR libraries
+
+---
+
+# Without classpath
+
+Compiler error occurs:
+
+```text id="xjlwm0"
+cannot find symbol
+```
+
+because Java cannot locate Hadoop libraries.
+
+---
+
+# STEP 3 — `hadoop classpath`
+
+```bash id="4jlwm1"
+`hadoop classpath`
+```
+
+VERY IMPORTANT.
+
+---
+
+# What Does This Command Do?
+
+Automatically prints:
+
+# all Hadoop library paths
+
+---
+
+# Example Output
+
+May produce:
+
+```text id="zjlwmx"
+/usr/local/hadoop/share/hadoop/common/*
+/usr/local/hadoop/share/hadoop/mapreduce/*
+...
+```
+
+---
+
+# Why Backticks Used?
+
+```bash id="cjlwmu"
+` `
+```
+
+means:
+
+# command substitution
+
+Shell executes inner command first.
+
+---
+
+# Internal Working
+
+---
+
+## Shell First Executes
+
+```bash id="gjlwmh"
+hadoop classpath
+```
+
+---
+
+## Gets Huge Library Path
+
+Example:
+
+```text id="yjlwmz"
+/path1:/path2:/path3
+```
+
+---
+
+## Final Expanded Command
+
+Becomes:
+
+```bash id="1jlwm6"
+javac -classpath /path1:/path2:/path3 ...
+```
+
+---
+
+# STEP 4 — -d .
+
+```bash id="8jlwm9"
+-d .
+```
+
+---
+
+# What is -d ?
+
+Means:
+
+# destination directory
+
+---
+
+# . (dot)
+
+Represents:
+
+# current directory
+
+---
+
+# Meaning
+
+Store generated:
+
+```text id="3jlwmj"
+.class files
+```
+
+in current folder.
+
+---
+
+# STEP 5 — Java Files
+
+```bash id="hjlwmt"
+WCMapper.java
+WCReducer.java
+WCDriver.java
+```
+
+These are source files.
+
+---
+
+# Compiler Generates
+
+```text id="7jlwmw"
+WCMapper.class
+WCReducer.class
+WCDriver.class
+```
+
+---
+
+# COMPLETE INTERNAL COMPILATION FLOW
+
+```text id="zjlwml"
+Java Source Code
+      ↓
+javac Compiler
+      ↓
+Syntax Checking
+      ↓
+Bytecode Generation
+      ↓
+.class Files
+```
+
+---
+
+# COMMAND 2 — CREATE JAR FILE
+
+```bash id="0jlwm8"
+jar -cvf wordcount.jar *.class
+```
+
+VERY IMPORTANT.
+
+---
+
+# What is JAR?
+
+# Java Archive File
+
+A compressed package containing:
+
+* class files
+* metadata
+* resources
+
+---
+
+# Why Hadoop Uses JAR?
+
+Hadoop distributes:
+
+# JAR file across cluster nodes
+
+---
+
+# STEP 1 — jar
+
+```bash id="zjlwmf"
+jar
+```
+
+Java archive tool.
+
+---
+
+# STEP 2 — -cvf
+
+VERY IMPORTANT.
+
+---
+
+# c
+
+```bash id="2jlwmk"
+c
+```
+
+means:
+
+# create
+
+Create new JAR.
+
+---
+
+# v
+
+```bash id="4jlwm3"
+v
+```
+
+means:
+
+# verbose
+
+Show detailed output.
+
+---
+
+# f
+
+```bash id="zjlwm4"
+f
+```
+
+means:
+
+# file
+
+Specify filename.
+
+---
+
+# STEP 3 — wordcount.jar
+
+Output JAR filename.
+
+---
+
+# STEP 4 — *.class
+
+VERY IMPORTANT.
+
+---
+
+# What is * ?
+
+Wildcard.
+
+Means:
+
+# all matching files
+
+---
+
+# *.class Means
+
+Include:
+
+```text id="8jlwm2"
+all .class files
+```
+
+---
+
+# Example
+
+```text id="5jlwmm"
+WCMapper.class
+WCReducer.class
+WCDriver.class
+```
+
+---
+
+# INTERNAL JAR CREATION FLOW
+
+```text id="0jlwm5"
+.class Files
+     ↓
+Compression
+     ↓
+Packaging
+     ↓
+wordcount.jar
+```
+
+---
+
+# Why JAR Important in Hadoop?
+
+Hadoop sends JAR:
+
+* across cluster
+* to worker nodes
+* for mapper/reducer execution
+
+---
+
+# COMMAND 3 — CREATE INPUT FILE
+
+```bash id="7jlwm4"
+nano input.txt
+```
+
+---
+
+# What is nano?
+
+# Terminal text editor
+
+Used to:
+
+* create files
+* edit files
+
+---
+
+# input.txt
+
+Text file containing data.
+
+---
+
+# After Writing
+
+```text id="6jlwm3"
+hadoop is big data
+hadoop is useful
+big data is powerful
+```
+
+This becomes:
+
+# input dataset
+
+---
+
+# Save and Exit
+
+---
+
+## CTRL + O
+
+Save file.
+
+---
+
+## CTRL + X
+
+Exit nano.
+
+---
+
+# COMMAND 4 — CREATE HDFS DIRECTORY
+
+```bash id="9jlwm2"
+hdfs dfs -mkdir /input
+```
+
+VERY IMPORTANT.
+
+---
+
+# hdfs
+
+Hadoop Distributed File System command.
+
+---
+
+# dfs
+
+Means:
+
+# distributed filesystem operations
+
+---
+
+# -mkdir
+
+Means:
+
+# make directory
+
+---
+
+# /input
+
+Directory name in HDFS.
+
+---
+
+# IMPORTANT
+
+This directory is:
+
+# NOT local filesystem
+
+It exists inside:
+
+# HDFS
+
+---
+
+# INTERNAL WORKING
+
+---
+
+## Command Sent to NameNode
+
+NameNode updates:
+
+```text id="1jlwm0"
+filesystem metadata
+```
+
+---
+
+## Creates HDFS Directory Entry
+
+```text id="8jlwm7"
+/input
+```
+
+---
+
+# COMMAND 5 — Upload File to HDFS
+
+```bash id="3jlwm7"
+hdfs dfs -put input.txt /input
+```
+
+VERY IMPORTANT.
+
+---
+
+# -put
+
+Means:
+
+# upload local file to HDFS
+
+---
+
+# Source
+
+```text id="9jlwm5"
+input.txt
+```
+
+local file.
+
+---
+
+# Destination
+
+```text id="zjlwm9"
+/input
+```
+
+HDFS directory.
+
+---
+
+# INTERNAL WORKING OF -put
+
+VERY IMPORTANT.
+
+---
+
+# STEP 1 — Client Contacts NameNode
+
+Requests:
+
+```text id="0jlwm1"
+store file
+```
+
+---
+
+# STEP 2 — NameNode Decides Block Locations
+
+Example:
+
+```text id="6jlwm9"
+Block1 → DataNode1
+Block2 → DataNode2
+```
+
+---
+
+# STEP 3 — File Split into Blocks
+
+Default:
+
+```text id="5jlwm0"
+128 MB
+```
+
+---
+
+# STEP 4 — Blocks Sent to DataNodes
+
+Stored distributedly.
+
+---
+
+# STEP 5 — Replication
+
+Copies created.
+
+Example:
+
+```text id="3jlwmz"
+3 replicas
+```
+
+---
+
+# FINAL RESULT
+
+File now exists in:
+
+# HDFS
+
+---
+
+# COMMAND 6 — List Files in HDFS
+
+```bash id="4jlwmn"
+hdfs dfs -ls /input
+```
+
+---
+
+# -ls
+
+Means:
+
+# list files
+
+---
+
+# Purpose
+
+Verify upload succeeded.
+
+---
+
+# Example Output
+
+```text id="yjlwm8"
+input.txt
+```
+
+---
+
+# COMMAND 7 — RUN MAPREDUCE PROGRAM
+
+```bash id="4jlwmt"
+hadoop jar wordcount.jar WCDriver /input /output
+```
+
+MOST IMPORTANT COMMAND.
+
+---
+
+# COMPLETE STRUCTURE
+
+```bash id="6jlwm7"
+hadoop jar <jarfile> <mainclass> <input> <output>
+```
+
+---
+
+# STEP 1 — hadoop
+
+Runs Hadoop framework.
+
+---
+
+# STEP 2 — jar
+
+Tells Hadoop:
+
+```text id="4jlwm5"
+execute JAR application
+```
+
+---
+
+# STEP 3 — wordcount.jar
+
+Contains:
+
+* mapper class
+* reducer class
+* driver class
+
+---
+
+# STEP 4 — WCDriver
+
+Main driver class.
+
+Hadoop internally calls:
+
+```java id="0jlwm7"
+main()
+```
+
+inside:
+
+```java id="zjlwm1"
+WCDriver
+```
+
+---
+
+# STEP 5 — /input
+
+Input HDFS directory.
+
+---
+
+# STEP 6 — /output
+
+Output HDFS directory.
+
+Reducer output stored here.
+
+---
+
+# COMPLETE INTERNAL EXECUTION FLOW
+
+VERY IMPORTANT.
+
+---
+
+# STEP 1 — Hadoop Starts JVM
+
+Loads:
+
+```text id="1jlwm9"
+wordcount.jar
+```
+
+---
+
+# STEP 2 — WCDriver.main() Executes
+
+---
+
+# STEP 3 — JobConf Created
+
+Stores configuration.
+
+---
+
+# STEP 4 — Input Splits Created
+
+Input file divided into blocks.
+
+---
+
+# STEP 5 — Mapper Tasks Assigned
+
+Usually:
+
+```text id="4jlwm0"
+1 split = 1 mapper
+```
+
+---
+
+# STEP 6 — Mapper Execution
+
+Generates:
+
+```text id="3jlwm4"
+(word,1)
+```
+
+pairs.
+
+---
+
+# Example Mapper Output
+
+```text id="9jlwm1"
+(hadoop,1)
+(is,1)
+(big,1)
+(data,1)
+```
+
+---
+
+# STEP 7 — Shuffle Phase
+
+Groups identical keys.
+
+---
+
+# Example
+
+```text id="8jlwm5"
+(hadoop,[1,1])
+(is,[1,1,1])
+```
+
+---
+
+# STEP 8 — Sort Phase
+
+Alphabetical sorting.
+
+---
+
+# STEP 9 — Reducer Execution
+
+Calculates totals.
+
+---
+
+# Example
+
+```text id="7jlwm1"
+(hadoop,2)
+```
+
+---
+
+# STEP 10 — Output Stored in HDFS
+
+Inside:
+
+```text id="2jlwm9"
+/output
+```
+
+---
+
+# COMMAND 8 — VIEW OUTPUT
+
+```bash id="9jlwm7"
+hdfs dfs -cat /output/part-00000
+```
+
+VERY IMPORTANT.
+
+---
+
+# -cat
+
+Means:
+
+# display file contents
+
+---
+
+# What is part-00000?
+
+Reducer output file.
+
+---
+
+# Why Named part-00000?
+
+Hadoop reducers generate:
+
+```text id="6jlwm8"
+part files
+```
+
+---
+
+# Example
+
+| Reducers   | Output Files           |
+| ---------- | ---------------------- |
+| 1 reducer  | part-00000             |
+| 2 reducers | part-00000, part-00001 |
+
+---
+
+# FINAL OUTPUT
+
+```text id="5jlwm6"
+big 2
+data 2
+hadoop 2
+is 3
+powerful 1
+useful 1
+```
+
+---
+
+# COMPLETE END-TO-END FLOW
+
+```text id="4jlwm8"
+Java Files
+   ↓
+javac
+   ↓
+.class Files
+   ↓
+jar
+   ↓
+wordcount.jar
+   ↓
+Upload Input to HDFS
+   ↓
+Run Hadoop Job
+   ↓
+Mapper Execution
+   ↓
+Shuffle & Sort
+   ↓
+Reducer Execution
+   ↓
+Output in HDFS
+   ↓
+View Output
+```
+
+---
+
+# IMPORTANT HADOOP CONCEPTS USED
+
+| Concept               | Used In          |
+| --------------------- | ---------------- |
+| Compilation           | javac            |
+| Classpath             | Hadoop libraries |
+| Packaging             | JAR              |
+| HDFS Upload           | put              |
+| Distributed Storage   | HDFS             |
+| Job Submission        | hadoop jar       |
+| Distributed Execution | Mapper/Reducer   |
+| Aggregation           | Reducer          |
+| Output Retrieval      | cat              |
+
+---
+
+# VERY IMPORTANT INTERVIEW/EXAM CONCEPTS
+
+---
+
+# Why JAR Needed?
+
+Because Hadoop distributes application across cluster nodes.
+
+---
+
+# Why Classpath Needed?
+
+Compiler must locate Hadoop libraries.
+
+---
+
+# Why HDFS Used?
+
+MapReduce operates on distributed filesystem.
+
+---
+
+# Why Output Directory Must Not Exist?
+
+Hadoop prevents accidental overwrite.
+
+---
+
+# Why part-00000?
+
+Reducer output stored as partitioned files.
+
+---
+
+# FINAL UNDERSTANDING
+
+These commands together demonstrate:
+
+* Java compilation
+* Hadoop library linking
+* distributed storage
+* HDFS interaction
+* job packaging
+* MapReduce execution
+* cluster computing
+* distributed processing
+* output retrieval
+
+This is the complete practical lifecycle of a Hadoop MapReduce application.
